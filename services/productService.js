@@ -2,7 +2,7 @@ const productModel = require('../models/productModel');
 const db = require('../config/db'); 
 
 const productService = {
-    getHomeProducts: async () => {
+    getAllProducts: async () => {
         try {
 
             const products = await productModel.getAllWithDetails(); 
