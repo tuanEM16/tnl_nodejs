@@ -1,20 +1,24 @@
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql2'); 
+require('dotenv').config(); 
+
 const app = express();
-app.use(cors());
+const rootRouter = require('./routes/index'); 
+
+
+app.use(cors()); 
 app.use(express.json());
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '', 
-  database: 'tnl'
+app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static('uploads'));
+app.use('/api', rootRouter);
+app.use((req, res) => {
+    res.status(404).json({ success: false, message: "Đường dẫn API không tồn tại!" });
 });
-app.get('/api/products', (req, res) => {
-  const sql = "SELECT * FROM products";
-  db.query(sql, (err, results) => {
-    if (err) return res.json({ error: err.message });
-    res.json(results);
-  });
+
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`-----------------------------------------`);
+    console.log(`🚀 Server đồ án đang chạy tại: http://localhost:${PORT}`);
+    console.log(`-----------------------------------------`);
 });
-app.listen(5000, () => console.log("Backend đang chạy "));
