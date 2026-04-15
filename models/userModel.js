@@ -39,19 +39,19 @@ const User = {
         return rows[0];
     },
 
+    // Hàm mới: lấy user kèm password (dùng cho đổi mật khẩu, login)
+    getByIdWithPassword: async (id) => {
+        const [rows] = await pool.query(`SELECT * FROM user WHERE id = ?`, [id]);
+        return rows[0];
+    },
+
     getByEmail: async (email) => {
-        const [rows] = await pool.query(
-            `SELECT * FROM user WHERE email = ?`,
-            [email]
-        );
+        const [rows] = await pool.query(`SELECT * FROM user WHERE email = ?`, [email]);
         return rows[0];
     },
 
     getByUsername: async (username) => {
-        const [rows] = await pool.query(
-            `SELECT * FROM user WHERE username = ?`,
-            [username]
-        );
+        const [rows] = await pool.query(`SELECT * FROM user WHERE username = ?`, [username]);
         return rows[0];
     },
 

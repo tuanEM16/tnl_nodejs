@@ -1,6 +1,4 @@
-// controllers/productController.js
 const productService = require('../services/productService');
-
 const productController = {
     index: async (req, res) => {
         try {
@@ -18,7 +16,6 @@ const productController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     store: async (req, res) => {
         try {
             const id = await productService.store(req.body, req.files);
@@ -27,7 +24,6 @@ const productController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     show: async (req, res) => {
         try {
             const data = await productService.show(req.params.id);
@@ -39,7 +35,6 @@ const productController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     showBySlug: async (req, res) => {
         try {
             const data = await productService.showBySlug(req.params.slug);
@@ -51,7 +46,6 @@ const productController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     update: async (req, res) => {
         try {
             await productService.update(req.params.id, req.body, req.files);
@@ -60,7 +54,6 @@ const productController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     destroy: async (req, res) => {
         try {
             await productService.destroy(req.params.id);
@@ -70,5 +63,4 @@ const productController = {
         }
     }
 };
-
 module.exports = productController;

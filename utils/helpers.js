@@ -9,5 +9,4 @@ function toSlug(str) {
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-');
 }
-
 module.exports = { toSlug };

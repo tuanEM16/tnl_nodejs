@@ -1,6 +1,4 @@
-// controllers/orderController.js
 const orderService = require('../services/orderService');
-
 const orderController = {
     index: async (req, res) => {
         try {
@@ -19,7 +17,6 @@ const orderController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     store: async (req, res) => {
         try {
             const orderData = {
@@ -37,7 +34,6 @@ const orderController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     show: async (req, res) => {
         try {
             const data = await orderService.show(req.params.id);
@@ -52,7 +48,6 @@ const orderController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     update: async (req, res) => {
         try {
             await orderService.update(req.params.id, req.body);
@@ -61,7 +56,6 @@ const orderController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     updateStatus: async (req, res) => {
         try {
             await orderService.updateStatus(req.params.id, req.body.status);
@@ -70,7 +64,6 @@ const orderController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     updatePaymentStatus: async (req, res) => {
         try {
             await orderService.updatePaymentStatus(req.params.id, req.body.payment_status);
@@ -79,7 +72,6 @@ const orderController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     cancel: async (req, res) => {
         try {
             await orderService.cancel(req.params.id);
@@ -88,7 +80,6 @@ const orderController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     destroy: async (req, res) => {
         try {
             await orderService.destroy(req.params.id);
@@ -98,5 +89,4 @@ const orderController = {
         }
     }
 };
-
 module.exports = orderController;

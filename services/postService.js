@@ -1,20 +1,15 @@
-// services/postService.js
 const Post = require('../models/postModel');
 const { toSlug } = require('../utils/helpers');
-
 const postService = {
     index: async (filters) => {
         return await Post.getAll(filters);
     },
-
     show: async (id) => {
         return await Post.getById(id);
     },
-
     showBySlug: async (slug) => {
         return await Post.getBySlug(slug);
     },
-
     store: async (data) => {
         let slug = data.slug || toSlug(data.title);
         let exists = await Post.slugExists(slug);
@@ -28,7 +23,6 @@ const postService = {
         const payload = { ...data, slug: newSlug };
         return await Post.create(payload);
     },
-
     update: async (id, data) => {
         if (data.slug) {
             const exists = await Post.slugExists(data.slug, id);
@@ -49,11 +43,9 @@ const postService = {
         const affected = await Post.update(id, data);
         if (!affected) throw new Error('Không tìm thấy bài viết');
     },
-
     destroy: async (id) => {
         const affected = await Post.delete(id);
         if (!affected) throw new Error('Không tìm thấy bài viết');
     }
 };
-
 module.exports = postService;

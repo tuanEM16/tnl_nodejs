@@ -1,5 +1,4 @@
 const Banner = require('../models/bannerModel');
-
 const bannerService = {
     index: async (position) => await Banner.getAll(position),
     show: async (id) => await Banner.getById(id),
@@ -13,5 +12,4 @@ const bannerService = {
         if (!affected) throw new Error('Không tìm thấy banner');
     }
 };
-
 module.exports = bannerService;

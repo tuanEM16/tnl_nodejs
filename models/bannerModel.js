@@ -1,5 +1,4 @@
 const pool = require('../config/db');
-
 const Banner = {
     getAll: async (position = null) => {
         let sql = `SELECT * FROM banner WHERE status = 1`;
@@ -37,5 +36,4 @@ const Banner = {
         return result.affectedRows;
     }
 };
-
 module.exports = Banner;

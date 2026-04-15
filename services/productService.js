@@ -1,12 +1,9 @@
-// services/productService.js
 const Product = require('../models/productModel');
 const { toSlug } = require('../utils/helpers');
-
 const productService = {
     index: async (filters) => {
         return await Product.getAll(filters);
     },
-
     show: async (id) => {
         const product = await Product.getById(id);
         if (!product) return null;
@@ -17,7 +14,6 @@ const productService = {
         product.related = await Product.getRelated(product.category_id, id);
         return product;
     },
-
     showBySlug: async (slug) => {
         const product = await Product.getBySlug(slug);
         if (!product) return null;
@@ -29,7 +25,6 @@ const productService = {
         product.related = await Product.getRelated(product.category_id, id);
         return product;
     },
-
     store: async (data, files) => {
         let slug = data.slug || toSlug(data.name);
         let exists = await Product.slugExists(slug);
@@ -67,7 +62,6 @@ const productService = {
         }
         return productId;
     },
-
     update: async (id, data, files) => {
         if (data.slug) {
             const exists = await Product.slugExists(data.slug, id);
@@ -109,11 +103,9 @@ const productService = {
             await Product.updateStore(id, data.price_root || data.price_buy, data.qty);
         }
     },
-
     destroy: async (id) => {
         const affected = await Product.delete(id);
         if (!affected) throw new Error('Không tìm thấy sản phẩm');
     }
 };
-
 module.exports = productService;

@@ -1,6 +1,4 @@
-// controllers/postController.js
 const postService = require('../services/postService');
-
 const postController = {
     index: async (req, res) => {
         try {
@@ -17,7 +15,6 @@ const postController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     store: async (req, res) => {
         try {
             const id = await postService.store(req.body);
@@ -26,7 +23,6 @@ const postController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     show: async (req, res) => {
         try {
             const data = await postService.show(req.params.id);
@@ -38,7 +34,6 @@ const postController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     showBySlug: async (req, res) => {
         try {
             const data = await postService.showBySlug(req.params.slug);
@@ -50,7 +45,6 @@ const postController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     update: async (req, res) => {
         try {
             await postService.update(req.params.id, req.body);
@@ -59,7 +53,6 @@ const postController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     destroy: async (req, res) => {
         try {
             await postService.destroy(req.params.id);
@@ -69,5 +62,4 @@ const postController = {
         }
     }
 };
-
 module.exports = postController;

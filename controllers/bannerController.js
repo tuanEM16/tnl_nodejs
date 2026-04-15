@@ -1,5 +1,4 @@
 const bannerService = require('../services/bannerService');
-
 const bannerController = {
     index: async (req, res) => {
         try {
@@ -44,5 +43,4 @@ const bannerController = {
         }
     }
 };
-
 module.exports = bannerController;

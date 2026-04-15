@@ -1,5 +1,4 @@
 const contactService = require('../services/contactService');
-
 const contactController = {
     index: async (req, res) => {
         try {
@@ -15,7 +14,6 @@ const contactController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     store: async (req, res) => {
         try {
             const payload = {
@@ -28,7 +26,6 @@ const contactController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     show: async (req, res) => {
         try {
             const data = await contactService.show(req.params.id);
@@ -40,7 +37,6 @@ const contactController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     reply: async (req, res) => {
         try {
             const id = await contactService.storeReply(req.params.id, req.body, req.user.id);
@@ -49,7 +45,6 @@ const contactController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     update: async (req, res) => {
         try {
             await contactService.update(req.params.id, req.body);
@@ -58,7 +53,6 @@ const contactController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     updateStatus: async (req, res) => {
         try {
             await contactService.updateStatus(req.params.id, req.body.status);
@@ -67,7 +61,6 @@ const contactController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     destroy: async (req, res) => {
         try {
             await contactService.destroy(req.params.id);
@@ -77,5 +70,4 @@ const contactController = {
         }
     }
 };
-
 module.exports = contactController;

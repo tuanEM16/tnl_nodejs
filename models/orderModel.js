@@ -1,6 +1,4 @@
-// models/orderModel.js
 const pool = require('../config/db');
-
 const Order = {
     getAll: async (filters = {}) => {
         let sql = `SELECT o.*, u.name as user_name, u.email as user_email 
@@ -40,7 +38,6 @@ const Order = {
         const [rows] = await pool.query(sql, params);
         return rows;
     },
-
     getById: async (id) => {
         const [rows] = await pool.query(
             `SELECT o.*, u.name as user_name, u.email as user_email 
@@ -51,7 +48,6 @@ const Order = {
         );
         return rows[0];
     },
-
     getDetails: async (orderId) => {
         const [rows] = await pool.query(
             `SELECT od.*, p.name as product_name, p.slug, p.thumbnail 
@@ -62,7 +58,6 @@ const Order = {
         );
         return rows;
     },
-
     create: async (data) => {
         const { user_id, name, email, phone, address, note, payment_method = 'cod', created_by = null } = data;
         const [result] = await pool.query(
@@ -72,7 +67,6 @@ const Order = {
         );
         return result.insertId;
     },
-
     createDetail: async (orderId, detail) => {
         const { product_id, price, qty, amount, discount = 0 } = detail;
         await pool.query(
@@ -81,7 +75,6 @@ const Order = {
             [orderId, product_id, price, qty, amount, discount]
         );
     },
-
     update: async (id, data) => {
         const fields = [];
         const values = [];
@@ -99,7 +92,6 @@ const Order = {
         );
         return result.affectedRows;
     },
-
     updateStatus: async (id, status) => {
         const [result] = await pool.query(
             `UPDATE \`order\` SET status = ?, updated_at = NOW() WHERE id = ?`,
@@ -107,7 +99,6 @@ const Order = {
         );
         return result.affectedRows;
     },
-
     updatePaymentStatus: async (id, payment_status, paid_at = null) => {
         const [result] = await pool.query(
             `UPDATE \`order\` SET payment_status = ?, paid_at = ?, updated_at = NOW() WHERE id = ?`,
@@ -115,12 +106,10 @@ const Order = {
         );
         return result.affectedRows;
     },
-
     delete: async (id) => {
         const [result] = await pool.query(`UPDATE \`order\` SET status = 5 WHERE id = ?`, [id]);
         return result.affectedRows;
     },
-
     getTotalAmount: async (orderId) => {
         const [rows] = await pool.query(
             `SELECT SUM(amount) as total FROM order_detail WHERE order_id = ?`,
@@ -129,5 +118,4 @@ const Order = {
         return rows[0].total || 0;
     }
 };
-
 module.exports = Order;

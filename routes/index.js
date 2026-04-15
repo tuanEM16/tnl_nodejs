@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-
 const bannerRoutes = require('./bannerRoutes');
 const categoryRoutes = require('./categoryRoutes');
 const productRoutes = require('./productRoutes');
@@ -9,7 +8,6 @@ const orderRoutes = require('./orderRoutes');
 const contactRoutes = require('./contactRoutes');
 const postRoutes = require('./postRoutes');
 const menuRoutes = require('./menuRoutes');
-
 router.use(bannerRoutes);
 router.use(categoryRoutes);
 router.use(productRoutes);
@@ -18,5 +16,4 @@ router.use(orderRoutes);
 router.use(contactRoutes);
 router.use(postRoutes);
 router.use(menuRoutes);
-
 module.exports = router;

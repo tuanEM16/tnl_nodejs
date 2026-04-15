@@ -1,6 +1,4 @@
-// models/contactModel.js
 const pool = require('../config/db');
-
 const Contact = {
     getAll: async (filters = {}) => {
         let sql = `SELECT c.*, u.name as user_name, u.email as user_email 
@@ -28,7 +26,6 @@ const Contact = {
         const [rows] = await pool.query(sql, params);
         return rows;
     },
-
     getById: async (id) => {
         const [rows] = await pool.query(
             `SELECT c.*, u.name as user_name, u.email as user_email 
@@ -39,7 +36,6 @@ const Contact = {
         );
         return rows[0];
     },
-
     getReplies: async (contactId) => {
         const [rows] = await pool.query(
             `SELECT c.*, u.name as user_name 
@@ -51,7 +47,6 @@ const Contact = {
         );
         return rows;
     },
-
     create: async (data) => {
         const { user_id, name, email, phone, content, reply_id = 0, created_by = null } = data;
         const [result] = await pool.query(
@@ -61,7 +56,6 @@ const Contact = {
         );
         return result.insertId;
     },
-
     update: async (id, data) => {
         const fields = [];
         const values = [];
@@ -79,7 +73,6 @@ const Contact = {
         );
         return result.affectedRows;
     },
-
     updateStatus: async (id, status) => {
         const [result] = await pool.query(
             `UPDATE contact SET status = ?, updated_at = NOW() WHERE id = ?`,
@@ -87,11 +80,9 @@ const Contact = {
         );
         return result.affectedRows;
     },
-
     delete: async (id) => {
         const [result] = await pool.query(`UPDATE contact SET status = 0 WHERE id = ?`, [id]);
         return result.affectedRows;
     }
 };
-
 module.exports = Contact;

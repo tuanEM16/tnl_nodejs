@@ -1,4 +1,3 @@
-// routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
@@ -16,5 +15,4 @@ router.get('/users', authMiddleware, userController.index);
 router.get('/users/:id', authMiddleware, userController.show);
 router.put('/users/:id', authMiddleware, upload.single('avatar'), userController.update);
 router.delete('/users/:id', authMiddleware, userController.destroy);
-
 module.exports = router;

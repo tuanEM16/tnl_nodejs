@@ -1,13 +1,9 @@
-// services/categoryService.js
 const Category = require('../models/categoryModel');
 const { toSlug } = require('../utils/helpers');
-
 const categoryService = {
-
     index: async (parentId = null) => {
         return await Category.getAll(parentId);
     },
-
     getTree: async (parentId = 0) => {
         const categories = await Category.getChildren(parentId);
         for (let cat of categories) {
@@ -15,17 +11,12 @@ const categoryService = {
         }
         return categories;
     },
-
     show: async (id) => {
         return await Category.getById(id);
     },
-
-
     showBySlug: async (slug) => {
         return await Category.getBySlug(slug);
     },
-
-
     store: async (data) => {
         let slug = data.slug;
         if (!slug) {
@@ -42,8 +33,6 @@ const categoryService = {
         const payload = { ...data, slug: newSlug };
         return await Category.create(payload);
     },
-
-
     update: async (id, data) => {
         if (data.slug) {
             const exists = await Category.slugExists(data.slug, id);
@@ -66,11 +55,9 @@ const categoryService = {
         const affected = await Category.update(id, data);
         if (!affected) throw new Error('Không tìm thấy danh mục');
     },
-
     destroy: async (id) => {
         const affected = await Category.delete(id);
         if (!affected) throw new Error('Không tìm thấy danh mục');
     }
 };
-
 module.exports = categoryService;

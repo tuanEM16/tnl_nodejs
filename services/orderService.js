@@ -1,19 +1,15 @@
-// services/orderService.js
 const Order = require('../models/orderModel');
 const Product = require('../models/productModel');
-
 const orderService = {
     index: async (filters) => {
         return await Order.getAll(filters);
     },
-
     show: async (id) => {
         const order = await Order.getById(id);
         if (!order) return null;
         order.details = await Order.getDetails(id);
         return order;
     },
-
     store: async (data, items) => {
         const orderId = await Order.create(data);
         let totalAmount = 0;
@@ -31,22 +27,18 @@ const orderService = {
         }
         return { orderId, totalAmount };
     },
-
     update: async (id, data) => {
         const affected = await Order.update(id, data);
         if (!affected) throw new Error('Không tìm thấy đơn hàng');
     },
-
     updateStatus: async (id, status) => {
         const affected = await Order.updateStatus(id, status);
         if (!affected) throw new Error('Không tìm thấy đơn hàng');
     },
-
     updatePaymentStatus: async (id, payment_status) => {
         const affected = await Order.updatePaymentStatus(id, payment_status);
         if (!affected) throw new Error('Không tìm thấy đơn hàng');
     },
-
     cancel: async (id) => {
         const order = await Order.getById(id);
         if (!order) throw new Error('Không tìm thấy đơn hàng');
@@ -57,11 +49,9 @@ const orderService = {
             await Product.updateStoreQuantity(item.product_id, item.qty);
         }
     },
-
     destroy: async (id) => {
         const affected = await Order.delete(id);
         if (!affected) throw new Error('Không tìm thấy đơn hàng');
     }
 };
-
 module.exports = orderService;

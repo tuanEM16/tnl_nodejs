@@ -1,8 +1,5 @@
-// controllers/categoryController.js
 const categoryService = require('../services/categoryService');
-
 const categoryController = {
-
     index: async (req, res) => {
         try {
             const { parent_id, tree } = req.query;
@@ -17,7 +14,6 @@ const categoryController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     store: async (req, res) => {
         try {
             const id = await categoryService.store(req.body);
@@ -26,7 +22,6 @@ const categoryController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     show: async (req, res) => {
         try {
             const data = await categoryService.show(req.params.id);
@@ -38,7 +33,6 @@ const categoryController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     showBySlug: async (req, res) => {
         try {
             const data = await categoryService.showBySlug(req.params.slug);
@@ -50,8 +44,6 @@ const categoryController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
-
     update: async (req, res) => {
         try {
             await categoryService.update(req.params.id, req.body);
@@ -60,8 +52,6 @@ const categoryController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
-
     destroy: async (req, res) => {
         try {
             await categoryService.destroy(req.params.id);
@@ -71,5 +61,4 @@ const categoryController = {
         }
     }
 };
-
 module.exports = categoryController;

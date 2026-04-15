@@ -1,6 +1,4 @@
-// models/postModel.js
 const pool = require('../config/db');
-
 const Post = {
     getAll: async (filters = {}) => {
         let sql = `SELECT p.*, t.name as topic_name, t.slug as topic_slug 
@@ -32,7 +30,6 @@ const Post = {
         const [rows] = await pool.query(sql, params);
         return rows;
     },
-
     getById: async (id) => {
         const [rows] = await pool.query(
             `SELECT p.*, t.name as topic_name, t.slug as topic_slug 
@@ -43,7 +40,6 @@ const Post = {
         );
         return rows[0];
     },
-
     getBySlug: async (slug) => {
         const [rows] = await pool.query(
             `SELECT p.*, t.name as topic_name, t.slug as topic_slug 
@@ -54,7 +50,6 @@ const Post = {
         );
         return rows[0];
     },
-
     create: async (data) => {
         const { topic_id, title, slug, image, content, description, post_type = 'post', created_by = 1 } = data;
         const [result] = await pool.query(
@@ -64,7 +59,6 @@ const Post = {
         );
         return result.insertId;
     },
-
     update: async (id, data) => {
         const fields = [];
         const values = [];
@@ -82,12 +76,10 @@ const Post = {
         );
         return result.affectedRows;
     },
-
     delete: async (id) => {
         const [result] = await pool.query(`UPDATE post SET status = 0 WHERE id = ?`, [id]);
         return result.affectedRows;
     },
-
     slugExists: async (slug, excludeId = null) => {
         let sql = `SELECT id FROM post WHERE slug = ?`;
         const params = [slug];
@@ -99,5 +91,4 @@ const Post = {
         return rows.length > 0;
     }
 };
-
 module.exports = Post;

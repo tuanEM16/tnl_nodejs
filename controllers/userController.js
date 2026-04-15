@@ -1,6 +1,4 @@
-// controllers/userController.js
 const userService = require('../services/userService');
-
 const userController = {
     index: async (req, res) => {
         try {
@@ -17,7 +15,6 @@ const userController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     register: async (req, res) => {
         try {
             const id = await userService.register(req.body);
@@ -26,7 +23,6 @@ const userController = {
             res.status(400).json({ success: false, message: error.message });
         }
     },
-
     login: async (req, res) => {
         try {
             const { username, password } = req.body;
@@ -36,7 +32,6 @@ const userController = {
             res.status(401).json({ success: false, message: error.message });
         }
     },
-
     profile: async (req, res) => {
         try {
             const data = await userService.show(req.user.id);
@@ -48,7 +43,6 @@ const userController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     updateProfile: async (req, res) => {
         try {
             await userService.update(req.user.id, req.body);
@@ -57,17 +51,16 @@ const userController = {
             res.status(400).json({ success: false, message: error.message });
         }
     },
-
     changePassword: async (req, res) => {
         try {
             const { old_password, new_password } = req.body;
             await userService.changePassword(req.user.id, old_password, new_password);
             res.status(200).json({ success: true, message: 'Đổi mật khẩu thành công' });
         } catch (error) {
+            console.log('Lỗi đổi mật khẩu:', error.message); // Thêm dòng này
             res.status(400).json({ success: false, message: error.message });
         }
     },
-
     show: async (req, res) => {
         try {
             const data = await userService.show(req.params.id);
@@ -79,7 +72,6 @@ const userController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     update: async (req, res) => {
         try {
             await userService.update(req.params.id, req.body);
@@ -88,7 +80,6 @@ const userController = {
             res.status(400).json({ success: false, message: error.message });
         }
     },
-
     destroy: async (req, res) => {
         try {
             await userService.destroy(req.params.id);
@@ -98,5 +89,4 @@ const userController = {
         }
     }
 };
-
 module.exports = userController;

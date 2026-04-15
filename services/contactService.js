@@ -1,11 +1,8 @@
-// services/contactService.js
 const Contact = require('../models/contactModel');
-
 const contactService = {
     index: async (filters) => {
         return await Contact.getAll(filters);
     },
-
     show: async (id) => {
         const contact = await Contact.getById(id);
         if (!contact) return null;
@@ -17,11 +14,9 @@ const contactService = {
         }
         return contact;
     },
-
     store: async (data) => {
         return await Contact.create(data);
     },
-
     storeReply: async (contactId, data, userId) => {
         const parent = await Contact.getById(contactId);
         if (!parent) throw new Error('Không tìm thấy liên hệ gốc');
@@ -35,21 +30,17 @@ const contactService = {
         };
         return await Contact.create(replyData);
     },
-
     update: async (id, data) => {
         const affected = await Contact.update(id, data);
         if (!affected) throw new Error('Không tìm thấy liên hệ');
     },
-
     updateStatus: async (id, status) => {
         const affected = await Contact.updateStatus(id, status);
         if (!affected) throw new Error('Không tìm thấy liên hệ');
     },
-
     destroy: async (id) => {
         const affected = await Contact.delete(id);
         if (!affected) throw new Error('Không tìm thấy liên hệ');
     }
 };
-
 module.exports = contactService;

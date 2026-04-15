@@ -13,6 +13,9 @@ const userService = {
     },
 
     register: async (data) => {
+        if (!data.name || !data.email || !data.phone || !data.username || !data.password) {
+            throw new Error('Vui lòng nhập đầy đủ thông tin');
+        }
         if (await User.emailExists(data.email)) {
             throw new Error('Email đã được sử dụng');
         }
@@ -44,7 +47,8 @@ const userService = {
     },
 
     changePassword: async (id, oldPassword, newPassword) => {
-        const user = await User.getById(id);
+        // Sửa: dùng hàm có trả về password
+        const user = await User.getByIdWithPassword(id);
         if (!user) throw new Error('Không tìm thấy người dùng');
         const match = await bcrypt.compare(oldPassword, user.password);
         if (!match) throw new Error('Mật khẩu cũ không đúng');
