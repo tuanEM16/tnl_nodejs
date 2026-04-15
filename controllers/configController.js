@@ -1,20 +1,23 @@
 const configService = require('../services/configService');
+
 const configController = {
-    getSystemConfig: async (req, res) => {
+    show: async (req, res) => {
         try {
-            const config = await configService.getConfig();
-            res.status(200).json({ success: true, data: config });
+            const data = await configService.show();
+            res.status(200).json({ success: true, data });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-    updateConfig: async (req, res) => {
+
+    update: async (req, res) => {
         try {
             await configService.update(req.body);
-            res.status(200).json({ success: true, message: "Đã cập nhật cấu hình hệ thống" });
+            res.status(200).json({ success: true, message: 'Cập nhật cấu hình thành công' });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
     }
 };
+
 module.exports = configController;

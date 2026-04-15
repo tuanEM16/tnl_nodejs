@@ -1,10 +1,13 @@
-const configModel = require('../models/configModel');
+const Config = require('../models/configModel');
+
 const configService = {
-    getConfig: async () => {
-        return await configModel.getLatest();
+    show: async () => {
+        return await Config.get();
     },
+
     update: async (data) => {
-        return await configModel.updateSystem(data);
+        await Config.update(data);
     }
 };
+
 module.exports = configService;

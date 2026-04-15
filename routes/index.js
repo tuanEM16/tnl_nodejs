@@ -1,26 +1,22 @@
 const express = require('express');
 const router = express.Router();
 
-
-const productRoutes = require('./productRoutes');
-const orderRoutes = require('./orderRoutes');
-const userRoutes = require('./userRoutes');
-const categoryRoutes = require('./categoryRoutes');
 const bannerRoutes = require('./bannerRoutes');
+const categoryRoutes = require('./categoryRoutes');
+const productRoutes = require('./productRoutes');
+const userRoutes = require('./userRoutes');
+const orderRoutes = require('./orderRoutes');
+const contactRoutes = require('./contactRoutes');
 const postRoutes = require('./postRoutes');
 const menuRoutes = require('./menuRoutes');
-const contactRoutes = require('./contactRoutes');
-const configRoutes = require('./configRoutes');
 
-
-router.use('/products', productRoutes); 
-router.use('/orders', orderRoutes);     
-router.use('/users', userRoutes);      
-router.use('/categories', categoryRoutes); 
-router.use('/banners', bannerRoutes);   
-router.use('/posts', postRoutes);       
-router.use('/menus', menuRoutes);      
-router.use('/contacts', contactRoutes); 
-router.use('/configs', configRoutes);   
+router.use(bannerRoutes);
+router.use(categoryRoutes);
+router.use(productRoutes);
+router.use(userRoutes);
+router.use(orderRoutes);
+router.use(contactRoutes);
+router.use(postRoutes);
+router.use(menuRoutes);
 
 module.exports = router;

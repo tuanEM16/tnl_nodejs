@@ -1,29 +1,74 @@
+// controllers/productController.js
 const productService = require('../services/productService');
+
 const productController = {
-    getAll: async (req, res) => {
+    index: async (req, res) => {
         try {
-            const products = await productService.getAllProducts(req.query);
-            res.status(200).json({ success: true, data: products });
+            const filters = {
+                category_id: req.query.category_id,
+                keyword: req.query.keyword,
+                min_price: req.query.min_price,
+                max_price: req.query.max_price,
+                limit: req.query.limit || 20,
+                offset: req.query.offset || 0
+            };
+            const data = await productService.index(filters);
+            res.status(200).json({ success: true, data });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-    getDetail: async (req, res) => {
+
+    store: async (req, res) => {
         try {
-            const product = await productService.getProductBySlug(req.params.slug);
-            if (!product) return res.status(404).json({ success: false, message: "Không tìm thấy sản phẩm" });
-            res.status(200).json({ success: true, data: product });
+            const id = await productService.store(req.body, req.files);
+            res.status(201).json({ success: true, message: 'Thêm sản phẩm thành công', id });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-    create: async (req, res) => {
+
+    show: async (req, res) => {
         try {
-            const newProduct = await productService.createProduct(req.body);
-            res.status(201).json({ success: true, data: newProduct });
+            const data = await productService.show(req.params.id);
+            if (!data) {
+                return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
+            }
+            res.status(200).json({ success: true, data });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    showBySlug: async (req, res) => {
+        try {
+            const data = await productService.showBySlug(req.params.slug);
+            if (!data) {
+                return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
+            }
+            res.status(200).json({ success: true, data });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    update: async (req, res) => {
+        try {
+            await productService.update(req.params.id, req.body, req.files);
+            res.status(200).json({ success: true, message: 'Cập nhật sản phẩm thành công' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    destroy: async (req, res) => {
+        try {
+            await productService.destroy(req.params.id);
+            res.status(200).json({ success: true, message: 'Xóa sản phẩm thành công' });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
     }
 };
+
 module.exports = productController;

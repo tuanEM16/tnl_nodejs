@@ -1,8 +1,10 @@
+// routes/configRoutes.js
 const express = require('express');
 const router = express.Router();
 const configController = require('../controllers/configController');
+const authMiddleware = require('../middleware/authMiddleware');
 
-router.get('/', configController.getSystemConfig);
-router.put('/update', configController.updateConfig);
+router.get('/config', configController.show);
+router.put('/config', authMiddleware, configController.update);
 
 module.exports = router;
