@@ -43,6 +43,15 @@ D:.
 |   |       bcrypt
 |   |       bcrypt.cmd
 |   |       bcrypt.ps1
+|   |       node-gyp-build
+|   |       node-gyp-build-optional
+|   |       node-gyp-build-optional.cmd
+|   |       node-gyp-build-optional.ps1
+|   |       node-gyp-build-test
+|   |       node-gyp-build-test.cmd
+|   |       node-gyp-build-test.ps1
+|   |       node-gyp-build.cmd
+|   |       node-gyp-build.ps1
 |   |       nodemon
 |   |       nodemon.cmd
 |   |       nodemon.ps1
@@ -305,6 +314,70 @@ D:.
 |   |               index.js.map
 |   |               package.json
 |   |               
+|   +---bcrypt
+|   |   |   .dockerignore
+|   |   |   .editorconfig
+|   |   |   bcrypt.js
+|   |   |   binding.gyp
+|   |   |   build-all.sh
+|   |   |   CHANGELOG.md
+|   |   |   Dockerfile
+|   |   |   Dockerfile-alpine
+|   |   |   ISSUE_TEMPLATE.md
+|   |   |   LICENSE
+|   |   |   Makefile
+|   |   |   package.json
+|   |   |   promises.js
+|   |   |   README.md
+|   |   |   SECURITY.md
+|   |   |   
+|   |   +---.github
+|   |   |   \---workflows
+|   |   |           build-pack-publish.yml
+|   |   |           ci.yaml
+|   |   |           
+|   |   +---examples
+|   |   |       async_compare.js
+|   |   |       forever_gen_salt.js
+|   |   |       
+|   |   +---prebuilds
+|   |   |   +---darwin-arm64
+|   |   |   |       bcrypt.node
+|   |   |   |       
+|   |   |   +---darwin-x64
+|   |   |   |       bcrypt.node
+|   |   |   |       
+|   |   |   +---linux-arm
+|   |   |   |       bcrypt.glibc.node
+|   |   |   |       bcrypt.musl.node
+|   |   |   |       
+|   |   |   +---linux-arm64
+|   |   |   |       bcrypt.glibc.node
+|   |   |   |       bcrypt.musl.node
+|   |   |   |       
+|   |   |   +---linux-x64
+|   |   |   |       bcrypt.glibc.node
+|   |   |   |       bcrypt.musl.node
+|   |   |   |       
+|   |   |   +---win32-arm64
+|   |   |   |       bcrypt.node
+|   |   |   |       
+|   |   |   \---win32-x64
+|   |   |           bcrypt.node
+|   |   |           
+|   |   +---src
+|   |   |       bcrypt.cc
+|   |   |       bcrypt_node.cc
+|   |   |       blowfish.cc
+|   |   |       node_blf.h
+|   |   |       
+|   |   \---test
+|   |           async.test.js
+|   |           implementation.test.js
+|   |           promise.test.js
+|   |           repetitions.test.js
+|   |           sync.test.js
+|   |           
 |   +---bcryptjs
 |   |   |   index.d.ts
 |   |   |   index.js
@@ -1477,6 +1550,39 @@ D:.
 |   |           language.js
 |   |           mediaType.js
 |   |           
+|   +---node-addon-api
+|   |   |   common.gypi
+|   |   |   except.gypi
+|   |   |   index.js
+|   |   |   LICENSE.md
+|   |   |   napi-inl.deprecated.h
+|   |   |   napi-inl.h
+|   |   |   napi.h
+|   |   |   node_addon_api.gyp
+|   |   |   node_api.gyp
+|   |   |   noexcept.gypi
+|   |   |   nothing.c
+|   |   |   package-support.json
+|   |   |   package.json
+|   |   |   README.md
+|   |   |   
+|   |   \---tools
+|   |           check-napi.js
+|   |           clang-format.js
+|   |           conversion.js
+|   |           README.md
+|   |           
+|   +---node-gyp-build
+|   |       bin.js
+|   |       build-test.js
+|   |       index.js
+|   |       LICENSE
+|   |       node-gyp-build.js
+|   |       optional.js
+|   |       package.json
+|   |       README.md
+|   |       SECURITY.md
+|   |       
 |   +---nodemon
 |   |   |   .prettierrc.json
 |   |   |   index.d.ts
@@ -2343,3 +2449,4 @@ D:.
 +---uploads
 \---utils
         helpers.js
+        

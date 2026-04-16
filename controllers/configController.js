@@ -1,4 +1,5 @@
 const configService = require('../services/configService');
+
 const configController = {
     show: async (req, res) => {
         try {
@@ -8,6 +9,7 @@ const configController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     update: async (req, res) => {
         try {
             await configService.update(req.body);
@@ -17,4 +19,5 @@ const configController = {
         }
     }
 };
+
 module.exports = configController;

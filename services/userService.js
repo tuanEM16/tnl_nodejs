@@ -1,7 +1,18 @@
-// services/userService.js
 const User = require('../models/userModel');
+const PasswordReset = require('../models/passwordResetModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    host: process.env.MAIL_HOST,
+    port: process.env.MAIL_PORT,
+    secure: process.env.MAIL_PORT == 465,
+    auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS
+    }
+});
 
 const userService = {
     index: async (filters) => {
@@ -10,25 +21,6 @@ const userService = {
 
     show: async (id) => {
         return await User.getById(id);
-    },
-
-    register: async (data) => {
-        if (!data.name || !data.email || !data.phone || !data.username || !data.password) {
-            throw new Error('Vui lòng nhập đầy đủ thông tin');
-        }
-        if (await User.emailExists(data.email)) {
-            throw new Error('Email đã được sử dụng');
-        }
-        if (await User.usernameExists(data.username)) {
-            throw new Error('Tên đăng nhập đã tồn tại');
-        }
-        const hashedPassword = await bcrypt.hash(data.password, 10);
-        const userData = {
-            ...data,
-            password: hashedPassword,
-            roles: 'customer'
-        };
-        return await User.create(userData);
     },
 
     login: async (username, password) => {
@@ -47,7 +39,6 @@ const userService = {
     },
 
     changePassword: async (id, oldPassword, newPassword) => {
-        // Sửa: dùng hàm có trả về password
         const user = await User.getByIdWithPassword(id);
         if (!user) throw new Error('Không tìm thấy người dùng');
         const match = await bcrypt.compare(oldPassword, user.password);
@@ -56,7 +47,64 @@ const userService = {
         await User.updatePassword(id, hashedPassword);
     },
 
-    update: async (id, data) => {
+    forgotPassword: async (email) => {
+        const user = await User.getByEmail(email);
+        if (!user) throw new Error('Email không tồn tại trong hệ thống');
+
+        // Xóa token cũ
+        await PasswordReset.deleteByEmail(email);
+
+        // Tạo token mới
+        const token = await PasswordReset.create(email);
+        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+        // Gửi email
+        const mailOptions = {
+            from: process.env.MAIL_FROM,
+            to: email,
+            subject: 'Đặt lại mật khẩu - Website Thép Xây Dựng',
+            html: `
+                <h3>Yêu cầu đặt lại mật khẩu</h3>
+                <p>Nhấn vào link bên dưới để đặt lại mật khẩu của bạn. Link có hiệu lực trong 15 phút.</p>
+                <a href="${resetLink}">${resetLink}</a>
+                <p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        return true;
+    },
+
+    resetPassword: async (token, newPassword) => {
+        const record = await PasswordReset.verify(token);
+        if (!record) throw new Error('Token không hợp lệ hoặc đã hết hạn');
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const user = await User.getByEmail(record.email);
+        if (!user) throw new Error('Người dùng không tồn tại');
+        await User.updatePassword(user.id, hashedPassword);
+        await PasswordReset.deleteByToken(token);
+    },
+
+    store: async (data, createdBy) => {
+        if (!data.name || !data.email || !data.username || !data.password) {
+            throw new Error('Vui lòng nhập đầy đủ thông tin');
+        }
+        if (await User.emailExists(data.email)) {
+            throw new Error('Email đã được sử dụng');
+        }
+        if (await User.usernameExists(data.username)) {
+            throw new Error('Tên đăng nhập đã tồn tại');
+        }
+        const hashedPassword = await bcrypt.hash(data.password, 10);
+        return await User.create({
+            ...data,
+            password: hashedPassword,
+            roles: 'admin',
+            created_by: createdBy
+        });
+    },
+
+    update: async (id, data, currentUserId) => {
         if (data.email) {
             const exists = await User.emailExists(data.email, id);
             if (exists) throw new Error('Email đã được sử dụng');

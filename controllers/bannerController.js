@@ -1,14 +1,16 @@
 const bannerService = require('../services/bannerService');
+
 const bannerController = {
     index: async (req, res) => {
         try {
-            const { position } = req.query;
-            const data = await bannerService.index(position);
+            const { page } = req.query;
+            const data = await bannerService.index(page);
             res.status(200).json({ success: true, data });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     store: async (req, res) => {
         try {
             const id = await bannerService.store(req.body);
@@ -17,15 +19,19 @@ const bannerController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     show: async (req, res) => {
         try {
             const data = await bannerService.show(req.params.id);
-            if (!data) return res.status(404).json({ success: false, message: 'Không tìm thấy banner' });
+            if (!data) {
+                return res.status(404).json({ success: false, message: 'Không tìm thấy banner' });
+            }
             res.status(200).json({ success: true, data });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     update: async (req, res) => {
         try {
             await bannerService.update(req.params.id, req.body);
@@ -34,6 +40,7 @@ const bannerController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     destroy: async (req, res) => {
         try {
             await bannerService.destroy(req.params.id);
@@ -43,4 +50,5 @@ const bannerController = {
         }
     }
 };
+
 module.exports = bannerController;

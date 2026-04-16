@@ -1,10 +1,49 @@
 const postService = require('../services/postService');
+
 const postController = {
+    // ========== CATEGORIES ==========
+    getCategories: async (req, res) => {
+        try {
+            const data = await postService.getCategories();
+            res.status(200).json({ success: true, data });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    storeCategory: async (req, res) => {
+        try {
+            const id = await postService.storeCategory(req.body);
+            res.status(201).json({ success: true, message: 'Thêm danh mục thành công', id });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    updateCategory: async (req, res) => {
+        try {
+            await postService.updateCategory(req.params.id, req.body);
+            res.status(200).json({ success: true, message: 'Cập nhật danh mục thành công' });
+        } catch (error) {
+            res.status(400).json({ success: false, message: error.message });
+        }
+    },
+
+    destroyCategory: async (req, res) => {
+        try {
+            await postService.destroyCategory(req.params.id);
+            res.status(200).json({ success: true, message: 'Xóa danh mục thành công' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    // ========== POSTS ==========
     index: async (req, res) => {
         try {
             const filters = {
-                topic_id: req.query.topic_id,
-                post_type: req.query.post_type || 'post',
+                post_type: req.query.post_type,
+                category_id: req.query.category_id,
                 keyword: req.query.keyword,
                 limit: req.query.limit || 20,
                 offset: req.query.offset || 0
@@ -15,6 +54,7 @@ const postController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     store: async (req, res) => {
         try {
             const id = await postService.store(req.body);
@@ -23,6 +63,7 @@ const postController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     show: async (req, res) => {
         try {
             const data = await postService.show(req.params.id);
@@ -34,6 +75,7 @@ const postController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     showBySlug: async (req, res) => {
         try {
             const data = await postService.showBySlug(req.params.slug);
@@ -45,14 +87,16 @@ const postController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     update: async (req, res) => {
         try {
             await postService.update(req.params.id, req.body);
             res.status(200).json({ success: true, message: 'Cập nhật bài viết thành công' });
         } catch (error) {
-            res.status(500).json({ success: false, message: error.message });
+            res.status(400).json({ success: false, message: error.message });
         }
     },
+
     destroy: async (req, res) => {
         try {
             await postService.destroy(req.params.id);
@@ -62,4 +106,5 @@ const postController = {
         }
     }
 };
+
 module.exports = postController;

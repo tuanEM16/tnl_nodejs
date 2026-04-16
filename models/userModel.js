@@ -1,4 +1,3 @@
-// models/userModel.js
 const pool = require('../config/db');
 
 const User = {
@@ -9,12 +8,8 @@ const User = {
             sql += ` AND status = ?`;
             params.push(filters.status);
         }
-        if (filters.roles) {
-            sql += ` AND roles = ?`;
-            params.push(filters.roles);
-        }
         if (filters.keyword) {
-            sql += ` AND (name LIKE ? OR email LIKE ? OR phone LIKE ?)`;
+            sql += ` AND (name LIKE ? OR email LIKE ? OR username LIKE ?)`;
             const kw = `%${filters.keyword}%`;
             params.push(kw, kw, kw);
         }
@@ -39,14 +34,8 @@ const User = {
         return rows[0];
     },
 
-    // Hàm mới: lấy user kèm password (dùng cho đổi mật khẩu, login)
     getByIdWithPassword: async (id) => {
         const [rows] = await pool.query(`SELECT * FROM user WHERE id = ?`, [id]);
-        return rows[0];
-    },
-
-    getByEmail: async (email) => {
-        const [rows] = await pool.query(`SELECT * FROM user WHERE email = ?`, [email]);
         return rows[0];
     },
 
@@ -55,12 +44,17 @@ const User = {
         return rows[0];
     },
 
+    getByEmail: async (email) => {
+        const [rows] = await pool.query(`SELECT * FROM user WHERE email = ?`, [email]);
+        return rows[0];
+    },
+
     create: async (data) => {
-        const { name, email, phone, username, password, roles = 'customer', avatar = null, created_by = null } = data;
+        const { name, email, phone, username, password, roles = 'admin', avatar = null, created_by = null } = data;
         const [result] = await pool.query(
             `INSERT INTO user (name, email, phone, username, password, roles, avatar, created_at, created_by, status)
              VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, 1)`,
-            [name, email, phone, username, password, roles, avatar, created_by || 1]
+            [name, email, phone || null, username, password, roles, avatar || null, created_by]
         );
         return result.insertId;
     },
@@ -93,6 +87,11 @@ const User = {
 
     delete: async (id) => {
         const [result] = await pool.query(`UPDATE user SET status = 0 WHERE id = ?`, [id]);
+        return result.affectedRows;
+    },
+
+    hardDelete: async (id) => {
+        const [result] = await pool.query(`DELETE FROM user WHERE id = ?`, [id]);
         return result.affectedRows;
     },
 

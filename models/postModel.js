@@ -1,18 +1,19 @@
 const pool = require('../config/db');
+
 const Post = {
     getAll: async (filters = {}) => {
-        let sql = `SELECT p.*, t.name as topic_name, t.slug as topic_slug 
+        let sql = `SELECT p.*, pc.name as category_name, pc.slug as category_slug 
                    FROM post p 
-                   LEFT JOIN topic t ON p.topic_id = t.id 
+                   LEFT JOIN post_category pc ON p.category_id = pc.id 
                    WHERE p.status = 1`;
         const params = [];
-        if (filters.topic_id) {
-            sql += ` AND p.topic_id = ?`;
-            params.push(filters.topic_id);
-        }
         if (filters.post_type) {
             sql += ` AND p.post_type = ?`;
             params.push(filters.post_type);
+        }
+        if (filters.category_id) {
+            sql += ` AND p.category_id = ?`;
+            params.push(filters.category_id);
         }
         if (filters.keyword) {
             sql += ` AND p.title LIKE ?`;
@@ -30,35 +31,39 @@ const Post = {
         const [rows] = await pool.query(sql, params);
         return rows;
     },
+
     getById: async (id) => {
         const [rows] = await pool.query(
-            `SELECT p.*, t.name as topic_name, t.slug as topic_slug 
+            `SELECT p.*, pc.name as category_name, pc.slug as category_slug 
              FROM post p 
-             LEFT JOIN topic t ON p.topic_id = t.id 
+             LEFT JOIN post_category pc ON p.category_id = pc.id 
              WHERE p.id = ?`,
             [id]
         );
         return rows[0];
     },
+
     getBySlug: async (slug) => {
         const [rows] = await pool.query(
-            `SELECT p.*, t.name as topic_name, t.slug as topic_slug 
+            `SELECT p.*, pc.name as category_name, pc.slug as category_slug 
              FROM post p 
-             LEFT JOIN topic t ON p.topic_id = t.id 
+             LEFT JOIN post_category pc ON p.category_id = pc.id 
              WHERE p.slug = ? AND p.status = 1`,
             [slug]
         );
         return rows[0];
     },
+
     create: async (data) => {
-        const { topic_id, title, slug, image, content, description, post_type = 'post', created_by = 1 } = data;
+        const { category_id, title, slug, image, content, description, post_type = 'post', created_by = 1 } = data;
         const [result] = await pool.query(
-            `INSERT INTO post (topic_id, title, slug, image, content, description, post_type, created_at, created_by, status)
+            `INSERT INTO post (category_id, title, slug, image, content, description, post_type, created_at, created_by, status)
              VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, 1)`,
-            [topic_id || null, title, slug, image, content, description || null, post_type, created_by]
+            [category_id || null, title, slug, image || null, content, description || null, post_type, created_by]
         );
         return result.insertId;
     },
+
     update: async (id, data) => {
         const fields = [];
         const values = [];
@@ -76,10 +81,12 @@ const Post = {
         );
         return result.affectedRows;
     },
+
     delete: async (id) => {
         const [result] = await pool.query(`UPDATE post SET status = 0 WHERE id = ?`, [id]);
         return result.affectedRows;
     },
+
     slugExists: async (slug, excludeId = null) => {
         let sql = `SELECT id FROM post WHERE slug = ?`;
         const params = [slug];
@@ -91,4 +98,5 @@ const Post = {
         return rows.length > 0;
     }
 };
+
 module.exports = Post;

@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+
 const Product = {
     getAll: async (filters = {}) => {
         let sql = `SELECT p.*, c.name as category_name 
@@ -6,6 +7,7 @@ const Product = {
                    LEFT JOIN category c ON p.category_id = c.id 
                    WHERE p.status = 1`;
         const params = [];
+
         if (filters.category_id) {
             sql += ` AND p.category_id = ?`;
             params.push(filters.category_id);
@@ -14,14 +16,22 @@ const Product = {
             sql += ` AND p.name LIKE ?`;
             params.push(`%${filters.keyword}%`);
         }
-        if (filters.min_price) {
-            sql += ` AND p.price_buy >= ?`;
-            params.push(filters.min_price);
+
+        if (filters.attributes && Object.keys(filters.attributes).length > 0) {
+            const attrConditions = [];
+            for (const [attrId, value] of Object.entries(filters.attributes)) {
+                attrConditions.push(`(pa.attribute_id = ? AND pa.value = ?)`);
+                params.push(attrId, value);
+            }
+            sql += ` AND p.id IN (
+                SELECT pa.product_id FROM product_attribute pa 
+                WHERE ${attrConditions.join(' AND ')}
+                GROUP BY pa.product_id
+                HAVING COUNT(DISTINCT pa.attribute_id) = ?
+            )`;
+            params.push(Object.keys(filters.attributes).length);
         }
-        if (filters.max_price) {
-            sql += ` AND p.price_buy <= ?`;
-            params.push(filters.max_price);
-        }
+
         sql += ` ORDER BY p.created_at DESC`;
         if (filters.limit) {
             sql += ` LIMIT ?`;
@@ -34,6 +44,7 @@ const Product = {
         const [rows] = await pool.query(sql, params);
         return rows;
     },
+
     getById: async (id) => {
         const [rows] = await pool.query(
             `SELECT p.*, c.name as category_name 
@@ -44,6 +55,7 @@ const Product = {
         );
         return rows[0];
     },
+
     getBySlug: async (slug) => {
         const [rows] = await pool.query(
             `SELECT p.*, c.name as category_name 
@@ -54,6 +66,7 @@ const Product = {
         );
         return rows[0];
     },
+
     getImages: async (productId) => {
         const [rows] = await pool.query(
             `SELECT * FROM product_image WHERE product_id = ?`,
@@ -61,6 +74,7 @@ const Product = {
         );
         return rows;
     },
+
     getAttributes: async (productId) => {
         const [rows] = await pool.query(
             `SELECT pa.*, a.name as attribute_name 
@@ -71,24 +85,7 @@ const Product = {
         );
         return rows;
     },
-    getCurrentSale: async (productId) => {
-        const now = new Date();
-        const [rows] = await pool.query(
-            `SELECT * FROM product_sale 
-             WHERE product_id = ? AND status = 1 
-               AND date_begin <= ? AND date_end >= ? 
-             ORDER BY price_sale ASC LIMIT 1`,
-            [productId, now, now]
-        );
-        return rows[0];
-    },
-    getStore: async (productId) => {
-        const [rows] = await pool.query(
-            `SELECT * FROM product_store WHERE product_id = ? AND status = 1`,
-            [productId]
-        );
-        return rows;
-    },
+
     getRelated: async (categoryId, excludeId, limit = 4) => {
         const [rows] = await pool.query(
             `SELECT * FROM product 
@@ -98,15 +95,17 @@ const Product = {
         );
         return rows;
     },
+
     create: async (data) => {
-        const { category_id, name, slug, thumbnail, content, description, price_buy, created_by = 1 } = data;
+        const { category_id, name, slug, thumbnail, content, description, standard, application, created_by = 1 } = data;
         const [result] = await pool.query(
-            `INSERT INTO product (category_id, name, slug, thumbnail, content, description, price_buy, created_at, created_by, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, 1)`,
-            [category_id, name, slug, thumbnail, content, description || null, price_buy, created_by]
+            `INSERT INTO product (category_id, name, slug, thumbnail, content, description, standard, application, created_at, created_by, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, 1)`,
+            [category_id, name, slug, thumbnail, content, description || null, standard || null, application || null, created_by]
         );
         return result.insertId;
     },
+
     update: async (id, data) => {
         const fields = [];
         const values = [];
@@ -124,10 +123,12 @@ const Product = {
         );
         return result.affectedRows;
     },
+
     delete: async (id) => {
         const [result] = await pool.query(`UPDATE product SET status = 0 WHERE id = ?`, [id]);
         return result.affectedRows;
     },
+
     slugExists: async (slug, excludeId = null) => {
         let sql = `SELECT id FROM product WHERE slug = ?`;
         const params = [slug];
@@ -138,40 +139,28 @@ const Product = {
         const [rows] = await pool.query(sql, params);
         return rows.length > 0;
     },
+
     addImage: async (productId, image, alt = null, title = null) => {
-        const [result] = await pool.query(
+        await pool.query(
             `INSERT INTO product_image (product_id, image, alt, title) VALUES (?, ?, ?, ?)`,
             [productId, image, alt, title]
         );
-        return result.insertId;
     },
+
     deleteImages: async (productId) => {
         await pool.query(`DELETE FROM product_image WHERE product_id = ?`, [productId]);
     },
+
     addAttribute: async (productId, attributeId, value) => {
-        const [result] = await pool.query(
+        await pool.query(
             `INSERT INTO product_attribute (product_id, attribute_id, value) VALUES (?, ?, ?)`,
             [productId, attributeId, value]
         );
-        return result.insertId;
     },
+
     deleteAttributes: async (productId) => {
         await pool.query(`DELETE FROM product_attribute WHERE product_id = ?`, [productId]);
-    },
-    updateStore: async (productId, price_root, qty) => {
-        await pool.query(`DELETE FROM product_store WHERE product_id = ?`, [productId]);
-        if (qty !== undefined) {
-            await pool.query(
-                `INSERT INTO product_store (product_id, price_root, qty, created_at, status) VALUES (?, ?, ?, NOW(), 1)`,
-                [productId, price_root || 0, qty]
-            );
-        }
-    },
-    updateStoreQuantity: async (productId, delta) => {
-        await pool.query(
-            `UPDATE product_store SET qty = qty + ? WHERE product_id = ?`,
-            [delta, productId]
-        );
     }
 };
+
 module.exports = Product;

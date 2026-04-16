@@ -1,4 +1,5 @@
 const menuService = require('../services/menuService');
+
 const menuController = {
     index: async (req, res) => {
         try {
@@ -14,6 +15,7 @@ const menuController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     store: async (req, res) => {
         try {
             const id = await menuService.store(req.body);
@@ -22,6 +24,7 @@ const menuController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     show: async (req, res) => {
         try {
             const data = await menuService.show(req.params.id);
@@ -33,6 +36,7 @@ const menuController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     update: async (req, res) => {
         try {
             await menuService.update(req.params.id, req.body);
@@ -41,6 +45,7 @@ const menuController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     destroy: async (req, res) => {
         try {
             await menuService.destroy(req.params.id);
@@ -49,6 +54,7 @@ const menuController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     reorder: async (req, res) => {
         try {
             await menuService.reorder(req.body.items);
@@ -58,4 +64,5 @@ const menuController = {
         }
     }
 };
+
 module.exports = menuController;
