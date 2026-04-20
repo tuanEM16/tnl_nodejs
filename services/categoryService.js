@@ -22,11 +22,8 @@ const categoryService = {
         return await Category.getBySlug(slug);
     },
 
-    store: async (data) => {
-        let slug = data.slug;
-        if (!slug) {
-            slug = toSlug(data.name);
-        }
+    store: async (data, file) => {
+        let slug = data.slug || toSlug(data.name);
         let exists = await Category.slugExists(slug);
         let counter = 1;
         let newSlug = slug;
@@ -35,17 +32,32 @@ const categoryService = {
             exists = await Category.slugExists(newSlug);
             counter++;
         }
+
         const payload = { ...data, slug: newSlug };
+
+
+        if (file) {
+            payload.image = file.filename;
+        }
+
         return await Category.create(payload);
     },
 
-    update: async (id, data) => {
-        if (data.slug) {
-            const exists = await Category.slugExists(data.slug, id);
-            if (exists) throw new Error('Slug đã tồn tại');
+
+    update: async (id, data, file) => {
+        const updateData = { ...data };
+
+
+        delete updateData._method;
+
+
+        if (file) {
+            updateData.image = file.filename;
         }
-        if (data.name && !data.slug) {
-            let slug = toSlug(data.name);
+
+
+        if (updateData.name && !updateData.slug) {
+            let slug = toSlug(updateData.name);
             let exists = await Category.slugExists(slug, id);
             let counter = 1;
             let newSlug = slug;
@@ -54,9 +66,10 @@ const categoryService = {
                 exists = await Category.slugExists(newSlug, id);
                 counter++;
             }
-            data.slug = newSlug;
+            updateData.slug = newSlug;
         }
-        const affected = await Category.update(id, data);
+
+        const affected = await Category.update(id, updateData);
         if (!affected) throw new Error('Không tìm thấy danh mục');
     },
 

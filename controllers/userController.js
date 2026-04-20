@@ -1,7 +1,7 @@
 const userService = require('../services/userService');
 
 const userController = {
-    // ========== AUTH ==========
+
     login: async (req, res) => {
         try {
             const { username, password } = req.body;
@@ -41,13 +41,23 @@ const userController = {
         }
     },
 
+    // Backend: controllers/userController.js
     forgotPassword: async (req, res) => {
         try {
-            const { email } = req.body;
-            const resetLink = await userService.forgotPassword(email);
-            res.status(200).json({ success: true, message: 'Link đặt lại mật khẩu đã được gửi đến email của bạn', resetLink });
+            const { email } = req.body; // 'email' ở đây là cái identifier người dùng nhập
+            await userService.forgotPassword(email);
+            res.status(200).json({
+                success: true,
+                message: 'Mã xác thực đã được gửi!'
+            });
         } catch (error) {
-            res.status(400).json({ success: false, message: error.message });
+            // 🔥 QUAN TRỌNG: Phải log ra đây để con nhìn thấy lỗi thật ở Terminal
+            console.error("LỖI QUÊN MẬT KHẨU:", error.message);
+
+            res.status(400).json({
+                success: false,
+                message: error.message // Trả về câu "Lỗi: Không có tài khoản..."
+            });
         }
     },
 
@@ -61,7 +71,7 @@ const userController = {
         }
     },
 
-    // ========== ADMIN MANAGEMENT ==========
+
     index: async (req, res) => {
         try {
             const filters = {

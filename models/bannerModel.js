@@ -1,16 +1,35 @@
 const pool = require('../config/db');
 
 const Banner = {
-    getAll: async (page = null) => {
-        let sql = `SELECT * FROM banner WHERE status = 1`;
+    // 🔥 SỬA LỖI 1: Thay 'db' bằng 'pool' và thống nhất tên bảng 'banner'
+    getAll: async (filters = {}) => {
+        const page = filters.page || '';
+        const keyword = filters.keyword || '';
+
+        // Giả sử bảng của con tên là 'banner' (dựa theo hàm create/update của con)
+        let sql = "SELECT * FROM banner WHERE status != 0"; // Lấy những cái chưa bị xóa tạm
         const params = [];
-        if (page) {
-            sql += ` AND page = ?`;
+
+        if (page.trim() !== '') {
+            sql += " AND page = ?";
             params.push(page);
         }
-        sql += ` ORDER BY sort_order ASC, created_at DESC`;
-        const [rows] = await pool.query(sql, params);
-        return rows;
+
+        if (keyword.trim() !== '') {
+            sql += " AND name LIKE ?";
+            params.push(`%${keyword}%`);
+        }
+
+        sql += " ORDER BY sort_order ASC, created_at DESC";
+
+        try {
+            // Dùng pool.query (vì con đã import pool ở trên)
+            const [rows] = await pool.query(sql, params); 
+            return rows;
+        } catch (error) {
+            console.error("Lỗi SQL Banner getAll:", error);
+            throw error; 
+        }
     },
 
     getById: async (id) => {
@@ -47,6 +66,7 @@ const Banner = {
     },
 
     delete: async (id) => {
+        // Xóa tạm (soft delete) bằng cách set status = 0
         const [result] = await pool.query(`UPDATE banner SET status = 0 WHERE id = ?`, [id]);
         return result.affectedRows;
     }

@@ -1,3 +1,4 @@
+
 const Config = require('../models/configModel');
 
 const configService = {
@@ -6,6 +7,7 @@ const configService = {
     },
 
     update: async (data) => {
+
         const fixedFields = [
             'site_name', 'slogan', 'logo', 'favicon', 'email', 'phone',
             'hotline', 'address', 'map_embed', 'facebook', 'youtube',
@@ -19,18 +21,20 @@ const configService = {
             if (fixedFields.includes(key)) {
                 fixedData[key] = data[key];
             } else {
+
                 metaData[key] = data[key];
             }
         });
+
 
         if (Object.keys(fixedData).length > 0) {
             await Config.updateFixed(fixedData);
         }
 
+
         for (const [key, value] of Object.entries(metaData)) {
-            if (value === null || value === undefined || value === '') {
-                await Config.deleteMeta(key);
-            } else {
+
+            if (value !== undefined && value !== null) {
                 await Config.upsertMeta(key, value);
             }
         }

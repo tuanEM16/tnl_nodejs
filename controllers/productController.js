@@ -1,7 +1,7 @@
 const productService = require('../services/productService');
 
 const productController = {
-    // ========== ATTRIBUTES ==========
+
     getAttributes: async (req, res) => {
         try {
             const data = await productService.getAttributes();
@@ -38,7 +38,7 @@ const productController = {
         }
     },
 
-    // ========== PRODUCTS ==========
+
     index: async (req, res) => {
         try {
             const filters = {
@@ -84,10 +84,30 @@ const productController = {
         }
     },
 
+
+
+
+
     update: async (req, res) => {
         try {
-            await productService.update(req.params.id, req.body, req.files);
-            res.status(200).json({ success: true, message: 'Cập nhật sản phẩm thành công' });
+            const updateData = { ...req.body };
+
+
+            delete updateData._method;
+            delete updateData.attributes;
+
+
+
+            if (req.file) {
+                updateData.thumbnail = req.file.filename; // Gán tên file thật vào
+            } else {
+
+
+                delete updateData.thumbnail;
+            }
+
+            await productService.update(req.params.id, updateData, req.files);
+            res.status(200).json({ success: true, message: 'Cập nhật thành công' });
         } catch (error) {
             res.status(400).json({ success: false, message: error.message });
         }

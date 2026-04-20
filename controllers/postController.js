@@ -1,7 +1,7 @@
 const postService = require('../services/postService');
 
 const postController = {
-    // ========== CATEGORIES ==========
+
     getCategories: async (req, res) => {
         try {
             const data = await postService.getCategories();
@@ -38,7 +38,7 @@ const postController = {
         }
     },
 
-    // ========== POSTS ==========
+
     index: async (req, res) => {
         try {
             const filters = {
@@ -55,9 +55,21 @@ const postController = {
         }
     },
 
+
     store: async (req, res) => {
         try {
-            const id = await postService.store(req.body);
+
+            const image = req.file ? req.file.filename : null;
+
+
+            const payload = {
+                ...req.body,
+                image: image,
+
+                created_by: req.user?.id || 1
+            };
+
+            const id = await postService.store(payload);
             res.status(201).json({ success: true, message: 'Thêm bài viết thành công', id });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
@@ -88,12 +100,31 @@ const postController = {
         }
     },
 
+
     update: async (req, res) => {
         try {
-            await postService.update(req.params.id, req.body);
+            console.log('===== UPDATE POST =====');
+            console.log('req.params.id:', req.params.id);
+            console.log('req.file:', req.file);           // Phải có object chứa filename
+            console.log('req.body:', req.body);
+            const { id } = req.params;
+            const payload = { ...req.body };
+
+            if (req.file) {
+                payload.image = req.file.filename;
+            }
+
+
+            if (payload.image && typeof payload.image !== 'string') {
+                delete payload.image;
+            }
+
+
+            await postService.update(id, payload);
+
             res.status(200).json({ success: true, message: 'Cập nhật bài viết thành công' });
         } catch (error) {
-            res.status(400).json({ success: false, message: error.message });
+            res.status(500).json({ success: false, message: error.message });
         }
     },
 

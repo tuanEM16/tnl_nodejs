@@ -1,22 +1,35 @@
 const pool = require('../config/db');
-
 const Contact = {
     getAll: async (filters = {}) => {
         let sql = `SELECT * FROM contact WHERE 1=1`;
         const params = [];
-        if (filters.status !== undefined) {
+
+
+        if (filters.keyword) {
+            sql += ` AND (name LIKE ? OR email LIKE ? OR phone LIKE ?)`;
+            const searchPattern = `%${filters.keyword}%`;
+            params.push(searchPattern, searchPattern, searchPattern);
+        }
+
+
+        if (filters.status !== undefined && filters.status !== '') {
             sql += ` AND status = ?`;
             params.push(filters.status);
         }
+
         sql += ` ORDER BY created_at DESC`;
+
+
         if (filters.limit) {
             sql += ` LIMIT ?`;
             params.push(parseInt(filters.limit));
+
             if (filters.offset) {
                 sql += ` OFFSET ?`;
                 params.push(parseInt(filters.offset));
             }
         }
+
         const [rows] = await pool.query(sql, params);
         return rows;
     },

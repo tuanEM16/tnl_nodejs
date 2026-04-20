@@ -2,9 +2,10 @@ const pool = require('../config/db');
 const crypto = require('crypto');
 
 const PasswordReset = {
-    create: async (email) => {
+create: async (email) => {
         const token = crypto.randomBytes(32).toString('hex');
-        const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000); 
+
         await pool.query(
             `INSERT INTO password_reset (email, token, expires_at, created_at) VALUES (?, ?, ?, NOW())`,
             [email, token, expiresAt]

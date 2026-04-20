@@ -12,17 +12,6 @@ const productService = {
         if (!product) return null;
         product.images = await Product.getImages(id);
         product.attributes = await Product.getAttributes(id);
-        product.related = await Product.getRelated(product.category_id, id);
-        return product;
-    },
-
-    showBySlug: async (slug) => {
-        const product = await Product.getBySlug(slug);
-        if (!product) return null;
-        const id = product.id;
-        product.images = await Product.getImages(id);
-        product.attributes = await Product.getAttributes(id);
-        product.related = await Product.getRelated(product.category_id, id);
         return product;
     },
 
@@ -37,11 +26,12 @@ const productService = {
             counter++;
         }
 
+
         const productData = {
             category_id: data.category_id,
             name: data.name,
             slug: newSlug,
-            thumbnail: data.thumbnail || (files?.thumbnail?.[0]?.filename || ''),
+            thumbnail: files?.thumbnail ? files.thumbnail[0].filename : (data.thumbnail || ''),
             content: data.content,
             description: data.description,
             standard: data.standard,
@@ -68,10 +58,7 @@ const productService = {
     },
 
     update: async (id, data, files) => {
-        if (data.slug) {
-            const exists = await Product.slugExists(data.slug, id);
-            if (exists) throw new Error('Slug đã tồn tại');
-        }
+
         if (data.name && !data.slug) {
             let slug = toSlug(data.name);
             let exists = await Product.slugExists(slug, id);
@@ -85,12 +72,20 @@ const productService = {
             data.slug = newSlug;
         }
 
+
+        const updateData = { ...data };
+        delete updateData._method; // Xóa method spoofing
+        const attributesToUpdate = updateData.attributes; // Tách attributes ra
+        delete updateData.attributes; 
+
         if (files?.thumbnail) {
-            data.thumbnail = files.thumbnail[0].filename;
+            updateData.thumbnail = files.thumbnail[0].filename;
         }
 
-        const affected = await Product.update(id, data);
+
+        const affected = await Product.update(id, updateData);
         if (!affected) throw new Error('Không tìm thấy sản phẩm');
+
 
         if (files?.images) {
             await Product.deleteImages(id);
@@ -99,10 +94,13 @@ const productService = {
             }
         }
 
-        if (data.attributes !== undefined) {
+
+        if (attributesToUpdate !== undefined) {
             await Product.deleteAttributes(id);
-            if (data.attributes) {
-                const attrs = JSON.parse(data.attributes);
+            if (attributesToUpdate) {
+                const attrs = typeof attributesToUpdate === 'string' 
+                    ? JSON.parse(attributesToUpdate) 
+                    : attributesToUpdate;
                 for (const attr of attrs) {
                     await Product.addAttribute(id, attr.attribute_id, attr.value);
                 }
@@ -110,12 +108,22 @@ const productService = {
         }
     },
 
+
     destroy: async (id) => {
+
+
+        await Product.deleteImages(id);
+        
+
+        await Product.deleteAttributes(id);
+        
+
         const affected = await Product.delete(id);
-        if (!affected) throw new Error('Không tìm thấy sản phẩm');
+        if (!affected) throw new Error('Xóa sản phẩm thất bại');
+        return affected;
     },
 
-    // Attribute management
+
     getAttributes: async () => {
         return await Attribute.getAll();
     },

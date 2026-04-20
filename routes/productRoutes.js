@@ -4,13 +4,13 @@ const productController = require('../controllers/productController');
 const upload = require('../middleware/uploadMiddleware');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// Public
+
 router.get('/products', productController.index);
 router.get('/products/slug/:slug', productController.showBySlug);
 router.get('/products/:id', productController.show);
 router.get('/attributes', productController.getAttributes);
 
-// Admin
+
 router.post('/attributes', authMiddleware, productController.storeAttribute);
 router.put('/attributes/:id', authMiddleware, productController.updateAttribute);
 router.delete('/attributes/:id', authMiddleware, productController.destroyAttribute);

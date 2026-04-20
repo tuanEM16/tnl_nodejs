@@ -1,14 +1,21 @@
 const contactService = require('../services/contactService');
 
 const contactController = {
+
+
     index: async (req, res) => {
         try {
             const filters = {
                 status: req.query.status,
+
+                keyword: req.query.keyword,
                 limit: req.query.limit || 20,
                 offset: req.query.offset || 0
             };
+
+
             const data = await contactService.index(filters);
+
             res.status(200).json({ success: true, data });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });

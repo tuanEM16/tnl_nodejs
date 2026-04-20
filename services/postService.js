@@ -3,7 +3,7 @@ const PostCategory = require('../models/postCategoryModel');
 const { toSlug } = require('../utils/helpers');
 
 const postService = {
-    // ========== POST CATEGORY ==========
+
     getCategories: async () => {
         return await PostCategory.getAll();
     },
@@ -39,7 +39,7 @@ const postService = {
         if (!affected) throw new Error('Không tìm thấy danh mục');
     },
 
-    // ========== POST ==========
+
     index: async (filters) => {
         return await Post.getAll(filters);
     },
@@ -66,11 +66,14 @@ const postService = {
         return await Post.create(payload);
     },
 
+
     update: async (id, data) => {
+
         if (data.slug) {
             const exists = await Post.slugExists(data.slug, id);
-            if (exists) throw new Error('Slug bài viết đã tồn tại');
+            if (exists) throw new Error('Slug đã tồn tại');
         }
+
         if (data.title && !data.slug) {
             let slug = toSlug(data.title);
             let exists = await Post.slugExists(slug, id);
@@ -83,6 +86,7 @@ const postService = {
             }
             data.slug = newSlug;
         }
+
         const affected = await Post.update(id, data);
         if (!affected) throw new Error('Không tìm thấy bài viết');
     },

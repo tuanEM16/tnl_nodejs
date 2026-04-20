@@ -3,7 +3,9 @@ const PasswordReset = require('../models/passwordResetModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-
+const { resetPasswordTemplate } = require('../utils/emailTemplates');
+const pool = require('../config/db');
+const logoUrl = "https://tanngocluc.com.vn/wp-content/uploads/2025/06/logo.png";
 const transporter = nodemailer.createTransport({
     host: process.env.MAIL_HOST,
     port: process.env.MAIL_PORT,
@@ -47,33 +49,44 @@ const userService = {
         await User.updatePassword(id, hashedPassword);
     },
 
-    forgotPassword: async (email) => {
-        const user = await User.getByEmail(email);
-        if (!user) throw new Error('Email không tồn tại trong hệ thống');
+    forgotPassword: async (identifier) => {
+        // 1. Quét User: Tìm xem có ông nào tên đó không
+        const user = await User.getByIdentifier(identifier);
+        if (!user) throw new Error('Lỗi: Không có tài khoản nào với tên người dùng hoặc địa chỉ email đó.');
 
-        // Xóa token cũ
+        // 2. Lấy Config: Bốc tên công ty từ Database
+        const [configRows] = await pool.query("SELECT site_name FROM config LIMIT 1");
+        const siteName = configRows[0]?.site_name || "TÂN NGỌC LỰC STEEL";
+
+        // 3. Xử lý Logo: Dùng cái link HTTPS con vừa gửi cho "nét"
+        const logoUrl = "https://tanngocluc.com.vn/wp-content/uploads/2025/06/logo.png";
+
+        // 4. Xử lý Password Reset: Xóa cũ, tạo mới
+        const email = user.email;
         await PasswordReset.deleteByEmail(email);
 
-        // Tạo token mới
-        const token = await PasswordReset.create(email);
-        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+        // 🔥 Tạo token kèm thời gian 5 phút (Nhớ sửa Model như má dặn nhé)
+        const token = await PasswordReset.create(email, 5);
 
-        // Gửi email
+        // 5. Tạo Link Reset: Phải tạo link XONG mới làm Template
+        const baseUrl = process.env.FRONTEND_URL.replace(/\/$/, "");
+        const resetLink = `${baseUrl}/admin/reset-password?token=${token}`;
+
+        // 6. Đổ dữ liệu vào Template: Giờ thì resetLink đã có thực rồi!
+        const htmlContent = resetPasswordTemplate(user.name, user.username, resetLink, siteName, logoUrl);
+
+        // 7. Gửi Mail
         const mailOptions = {
             from: process.env.MAIL_FROM,
             to: email,
-            subject: 'Đặt lại mật khẩu - Website Thép Xây Dựng',
-            html: `
-                <h3>Yêu cầu đặt lại mật khẩu</h3>
-                <p>Nhấn vào link bên dưới để đặt lại mật khẩu của bạn. Link có hiệu lực trong 15 phút.</p>
-                <a href="${resetLink}">${resetLink}</a>
-                <p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
-            `
+            subject: `[${siteName}] XÁC THỰC PHỤC HỒI MẬT MÃ`,
+            html: htmlContent
         };
 
         await transporter.sendMail(mailOptions);
         return true;
     },
+
 
     resetPassword: async (token, newPassword) => {
         const record = await PasswordReset.verify(token);

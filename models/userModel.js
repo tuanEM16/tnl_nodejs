@@ -76,7 +76,13 @@ const User = {
         );
         return result.affectedRows;
     },
-
+    getByIdentifier: async (identifier) => {
+        const [rows] = await pool.query(
+            "SELECT * FROM user WHERE (email = ? OR username = ?) AND status != 0 LIMIT 1",
+            [identifier, identifier]
+        );
+        return rows.length > 0 ? rows[0] : null;
+    },
     updatePassword: async (id, hashedPassword) => {
         const [result] = await pool.query(
             `UPDATE user SET password = ?, updated_at = NOW() WHERE id = ?`,

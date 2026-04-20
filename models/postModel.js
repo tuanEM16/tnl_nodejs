@@ -58,27 +58,29 @@ const Post = {
         const { category_id, title, slug, image, content, description, post_type = 'post', created_by = 1 } = data;
         const [result] = await pool.query(
             `INSERT INTO post (category_id, title, slug, image, content, description, post_type, created_at, created_by, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, 1)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, 1)`,
             [category_id || null, title, slug, image || null, content, description || null, post_type, created_by]
         );
         return result.insertId;
     },
 
+
     update: async (id, data) => {
         const fields = [];
         const values = [];
+
         Object.keys(data).forEach(key => {
             if (data[key] !== undefined) {
                 fields.push(`${key} = ?`);
                 values.push(data[key]);
             }
         });
+
         if (fields.length === 0) return 0;
+
         values.push(id);
-        const [result] = await pool.query(
-            `UPDATE post SET ${fields.join(', ')}, updated_at = NOW() WHERE id = ?`,
-            values
-        );
+        const sql = `UPDATE post SET ${fields.join(', ')}, updated_at = NOW() WHERE id = ?`;
+        const [result] = await pool.query(sql, values);
         return result.affectedRows;
     },
 
