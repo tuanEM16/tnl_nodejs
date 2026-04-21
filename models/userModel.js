@@ -1,34 +1,64 @@
 const pool = require('../config/db');
 
 const User = {
+    // models/userModel.js
+
     getAll: async (filters = {}) => {
-        let sql = `SELECT id, name, email, phone, username, roles, avatar, created_at, status FROM user WHERE 1=1`;
+        // 1. Khai báo 2 câu lệnh gốc
+        let sql = `SELECT id, name, email, phone, username, roles, avatar, created_at,updated_at, status FROM user`;
+        let countSql = `SELECT COUNT(*) as total FROM user`;
+
+        // 2. Tạo phần điều kiện (WHERE) chung
+        let whereClause = ` WHERE status != 0`; // Mặc định không lấy những người đã bị xóa (Soft Delete)
         const params = [];
-        if (filters.status !== undefined) {
-            sql += ` AND status = ?`;
+
+        // Lọc theo trạng thái (nếu có truyền vào)
+        if (filters.status !== undefined && filters.status !== '') {
+            whereClause += ` AND status = ?`;
             params.push(filters.status);
         }
+
+        // Lọc theo từ khóa (Search)
         if (filters.keyword) {
-            sql += ` AND (name LIKE ? OR email LIKE ? OR username LIKE ?)`;
+            whereClause += ` AND (name LIKE ? OR email LIKE ? OR username LIKE ?)`;
             const kw = `%${filters.keyword}%`;
             params.push(kw, kw, kw);
         }
+
+        // 3. 🟢 Ráp phần WHERE vào cả 2 câu SQL
+        sql += whereClause;
+        countSql += whereClause;
+
+        // 4. Lấy TỔNG SỐ trước (Dùng chung params đã bốc ở trên)
+        const [totalRows] = await pool.query(countSql, params);
+        const total = totalRows[0].total;
+
+        // 5. Thêm Sắp xếp và Phân trang (Chỉ dành cho câu lệnh lấy dữ liệu)
         sql += ` ORDER BY created_at DESC`;
+
         if (filters.limit) {
             sql += ` LIMIT ?`;
             params.push(parseInt(filters.limit));
+
             if (filters.offset) {
                 sql += ` OFFSET ?`;
                 params.push(parseInt(filters.offset));
             }
         }
+
+        // 6. Thực thi lấy dữ liệu
         const [rows] = await pool.query(sql, params);
-        return rows;
+
+        // 7. Trả về cả hai để Frontend làm phân trang
+        return {
+            data: rows,
+            total: total
+        };
     },
 
     getById: async (id) => {
         const [rows] = await pool.query(
-            `SELECT id, name, email, phone, username, roles, avatar, created_at, status FROM user WHERE id = ?`,
+            `SELECT id, name, email, phone, username, roles, avatar, created_at,updated_at, status FROM user WHERE id = ?`,
             [id]
         );
         return rows[0];

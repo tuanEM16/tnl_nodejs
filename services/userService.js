@@ -70,7 +70,7 @@ const userService = {
 
         // 5. Tạo Link Reset: Phải tạo link XONG mới làm Template
         const baseUrl = process.env.FRONTEND_URL.replace(/\/$/, "");
-        const resetLink = `${baseUrl}/admin/reset-password?token=${token}`;
+        const resetLink = `${baseUrl}/reset-password?token=${token}`;
 
         // 6. Đổ dữ liệu vào Template: Giờ thì resetLink đã có thực rồi!
         const htmlContent = resetPasswordTemplate(user.name, user.username, resetLink, siteName, logoUrl);
