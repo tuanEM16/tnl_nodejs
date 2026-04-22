@@ -1,16 +1,69 @@
+// controllers/userController.js
 const userService = require('../services/userService');
-const bcrypt = require('bcrypt');
+
 const userController = {
+    // 🟢 LOGIN: Nhận 2 token và set 2 Cookie
     login: async (req, res) => {
         try {
             const { username, password } = req.body;
-            const result = await userService.login(username, password);
-            res.status(200).json({ success: true, ...result });
+            const { user, accessToken, refreshToken } = await userService.login(username, password);
+
+            const cookieOptions = {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'Lax',
+                path: '/',
+            };
+            // maxAge: 15 * 60 * 1000
+            // maxAge: 10 * 1000
+            // Set Access Token (15 phút)
+            res.cookie('token', accessToken, { ...cookieOptions, maxAge: 10 * 1000});
+            // Set Refresh Token (7 ngày)
+            res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 4 * 60 * 60 * 1000 });
+
+            res.status(200).json({ success: true, user });
         } catch (error) {
             res.status(401).json({ success: false, message: error.message });
         }
     },
 
+    // 🟢 REFRESH: Cổng "Hồi sinh" Access Token
+    refresh: async (req, res) => {
+        try {
+            const rfToken = req.cookies.refreshToken;
+            if (!rfToken) throw new Error('Phiên làm việc hết hạn');
+
+            const { accessToken, refreshToken } = await userService.refresh(rfToken);
+
+            const cookieOptions = {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'Lax',
+                path: '/',
+            };
+
+            // Xoay vòng cặp token mới
+            res.cookie('token', accessToken, { ...cookieOptions, maxAge: 10 * 1000 });
+            res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 4 * 60 * 60 * 1000 });
+
+            res.json({ success: true });
+        } catch (error) {
+            // Nếu có biến (hacker dùng lại token cũ), xóa sạch cookie
+            res.clearCookie('token');
+            res.clearCookie('refreshToken');
+            res.status(403).json({ success: false, message: error.message });
+        }
+    },
+
+    // 🟢 LOGOUT: Đốt sạch cả 2 hòm
+    logout: async (req, res) => {
+        res.clearCookie('token');
+        res.clearCookie('refreshToken');
+        res.json({ success: true, message: 'Đã đăng xuất' });
+    },
+    // ... các hàm khác giữ nguyên
+
+    // 🟢 3. PROFILE: Giữ nguyên logic vì Middleware đã lo phần bốc Token từ Cookie
     profile: async (req, res) => {
         try {
             const data = await userService.show(req.user.id);
@@ -21,12 +74,14 @@ const userController = {
         }
     },
 
+    // ... Các hàm updateProfile, update, changePassword, index, store, destroy giữ nguyên ...
+    // (Vì chúng đã tách biệt logic với Token rồi)
+
     updateProfile: async (req, res) => {
         try {
             let userData = { ...req.body };
             if (req.file) userData.avatar = req.file.filename;
 
-            // Kiểm tra nếu có pass mới ở profile thì phải hash
             if (userData.password && userData.password.trim() !== "") {
                 const salt = await bcrypt.genSalt(10);
                 userData.password = await bcrypt.hash(userData.password, salt);
@@ -44,27 +99,13 @@ const userController = {
     update: async (req, res) => {
         try {
             let updateData = { ...req.body };
-
-            // 🟢 CHỈ KIỂM TRA RỖNG, KHÔNG BĂM Ở ĐÂY NỮA
             if (!updateData.password || updateData.password.trim() === "") {
                 delete updateData.password;
             }
-
-            // Gửi dữ liệu thô sang Service, để Service tự băm
             await userService.update(req.params.id, updateData, req.user.id);
             res.json({ success: true, message: 'Cập nhật thành công!' });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
-        }
-    },
-
-    changePassword: async (req, res) => {
-        try {
-            const { old_password, new_password } = req.body;
-            await userService.changePassword(req.user.id, old_password, new_password);
-            res.status(200).json({ success: true, message: 'Đổi mật khẩu thành công' });
-        } catch (error) {
-            res.status(400).json({ success: false, message: error.message });
         }
     },
 
@@ -74,11 +115,18 @@ const userController = {
             await userService.forgotPassword(email);
             res.status(200).json({ success: true, message: 'Mã xác thực đã được gửi!' });
         } catch (error) {
-            console.error("LỖI QUÊN MẬT KHẨU:", error.message);
             res.status(400).json({ success: false, message: error.message });
         }
     },
-
+    changePassword: async (req, res) => {
+        try {
+            const { old_password, new_password } = req.body;
+            await userService.changePassword(req.user.id, old_password, new_password);
+            res.status(200).json({ success: true, message: 'Đổi mật khẩu thành công' });
+        } catch (error) {
+            res.status(400).json({ success: false, message: error.message });
+        }
+    },
     resetPassword: async (req, res) => {
         try {
             const { token, new_password } = req.body;
@@ -108,8 +156,6 @@ const userController = {
         try {
             const userData = { ...req.body };
             if (req.file) userData.avatar = req.file.filename;
-
-            // 🟢 Gửi pass thô sang luôn, Service sẽ băm
             const newId = await userService.store(userData, req.user.id);
             res.status(201).json({ success: true, id: newId });
         } catch (error) {
