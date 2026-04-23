@@ -1,5 +1,5 @@
 const productService = require('../services/productService');
-
+const pool = require('../config/db');
 const productController = {
 
     getAttributes: async (req, res) => {
@@ -10,7 +10,21 @@ const productController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+    getAttributeById: async (req, res) => {
+        try {
+            const { id } = req.params;
+            // Query vào bảng attribute số ít như ảnh đại ca gửi
+            const [rows] = await pool.query(`SELECT * FROM attribute WHERE id = ?`, [id]);
 
+            if (rows.length === 0) {
+                return res.status(404).json({ success: false, message: 'KHÔNG TÌM THẤY THÔNG SỐ NÀY' });
+            }
+
+            res.json({ success: true, data: rows[0] });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
     storeAttribute: async (req, res) => {
         try {
             const id = await productService.storeAttribute(req.body);
