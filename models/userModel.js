@@ -122,10 +122,9 @@ const User = {
     },
 
     delete: async (id) => {
-        const [result] = await pool.query(`UPDATE user SET status = 0 WHERE id = ?`, [id]);
+        const [result] = await pool.query(`DELETE FROM user WHERE id = ?`, [id]);
         return result.affectedRows;
     },
-
     hardDelete: async (id) => {
         const [result] = await pool.query(`DELETE FROM user WHERE id = ?`, [id]);
         return result.affectedRows;

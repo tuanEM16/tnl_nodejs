@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const { resetPasswordTemplate } = require('../utils/emailTemplates');
 const pool = require('../config/db');
-
+const { deleteFile } = require('../utils/fileHelpers');
 // Cấu hình Mailer
 const transporter = nodemailer.createTransport({
     host: process.env.MAIL_HOST,
@@ -17,18 +17,15 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// 🟢 HÀM ĐÚC CHÌA KHÓA TỔNG HỢP (Private Helper)
 const generateTokens = async (user) => {
-    // 1. Access Token sống ngắn (15 phút) - Dùng để ra vào các cửa
     const accessToken = jwt.sign(
-        { id: user.id, username: user.username, roles: user.roles }, 
-        process.env.JWT_SECRET, 
-        { expiresIn: '10s' }
+        { id: user.id, username: user.username, roles: user.roles },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
     );
 
-    // 2. Refresh Token sống dài (7 ngày) - Dùng để xin cấp lại Access Token
     const refreshToken = jwt.sign(
-        { id: user.id }, 
+        { id: user.id },
         process.env.JWT_REFRESH_SECRET, // Nhớ thêm biến này vào file .env
         { expiresIn: '4h' }
     );
@@ -36,7 +33,7 @@ const generateTokens = async (user) => {
     // 3. Lưu vào DB để quản lý Rotation (Xoay vòng bảo mật)
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
-    
+
     await pool.query(
         'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
         [user.id, refreshToken, expiresAt]
@@ -67,7 +64,7 @@ const userService = {
         try {
             // 1. Kiểm tra Token có tồn tại trong DB không
             const [rows] = await pool.query('SELECT * FROM refresh_tokens WHERE token = ?', [rfToken]);
-            
+
             if (rows.length === 0) {
                 // 🚩 PHÁT HIỆN XÂM NHẬP: Token này không có trong máy hoặc đã bị dùng trộm
                 const decoded = jwt.decode(rfToken);
@@ -139,19 +136,72 @@ const userService = {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         await User.updatePassword(id, hashedPassword);
     },
-    store: async (data, createdBy) => {
+    // 🟢 THÊM MỚI USER (Xử lý Avatar)
+    store: async (data, createdBy, file) => {
         const hashedPassword = await bcrypt.hash(data.password, 10);
-        return await User.create({ ...data, password: hashedPassword, roles: 'admin', created_by: createdBy });
+        const payload = {
+            ...data,
+            password: hashedPassword,
+            roles: 'admin',
+            created_by: createdBy
+        };
+
+        // Nếu có upload ảnh đại diện
+        if (file) {
+            payload.avatar = file.filename;
+        }
+
+        return await User.create(payload);
     },
-    update: async (id, data) => {
-        if (data.password) data.password = await bcrypt.hash(data.password, 10);
-        const affected = await User.update(id, data);
-        if (!affected) throw new Error('Cập nhật thất bại');
+    update: async (id, data, file) => {
+        const updateData = { ...data };
+
+        // 🗑️ DỌN DẸP TRƯỚC KHI UPDATE
+        delete updateData._method; // Xóa hack method của Laravel/Next
+
+        // 🚩 QUAN TRỌNG: Nếu trong data có gửi kèm cái avatar cũ (dạng string), 
+        // phải xóa nó đi để nó không đè lên cái file mới mình sắp gán.
+        delete updateData.avatar;
+
+        // Xử lý mật khẩu (Chỉ hash nếu đại ca có nhập pass mới)
+        if (data.password && data.password.trim() !== '') {
+            updateData.password = await bcrypt.hash(data.password, 10);
+        } else {
+            delete updateData.password; // Không gửi field password trống vào DB
+        }
+
+        // 🖼️ XỬ LÝ ẢNH (AVATAR)
+        if (file) {
+            // 1. Lấy thông tin user cũ để tìm tên ảnh hiện tại
+            const oldUser = await User.getById(id);
+            if (oldUser && oldUser.avatar) {
+                // 2. Xóa ảnh cũ trong thư mục uploads
+                await deleteFile(oldUser.avatar);
+            }
+            // 3. GÁN TÊN FILE MỚI VÀO CỘT 'avatar'
+            updateData.avatar = file.filename;
+        }
+
+        // Gọi Model để cập nhật
+        const affected = await User.update(id, updateData);
+        if (!affected && !file) throw new Error('Không có thay đổi nào được thực hiện');
+        return affected;
     },
+
+    // 🟢 XÓA USER (Dọn sạch cả File lẫn DB)
     destroy: async (id) => {
+        // 1. Tìm thông tin user để lấy tên avatar
+        const user = await User.getById(id);
+        if (user && user.avatar) {
+            // 2. Xóa ảnh đại diện vật lý
+            await deleteFile(user.avatar);
+        }
+
+        // 3. Xóa bản ghi trong Database
         const affected = await User.delete(id);
         if (!affected) throw new Error('Xóa thất bại');
-    }
+        return affected;
+    },
 };
 
 module.exports = userService;

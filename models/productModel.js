@@ -1,6 +1,7 @@
 const pool = require('../config/db');
 
 const Product = {
+    // 🟢 1. TRUY XUẤT DANH SÁCH (Hỗ trợ bộ lọc thông minh ở mục 4 trong đề cương)
     getAll: async (filters = {}) => {
         let sql = `SELECT p.*, c.name as category_name 
                    FROM product p 
@@ -67,6 +68,7 @@ const Product = {
         return rows[0];
     },
 
+    // 🟢 2. QUẢN LÝ ẢNH PHỤ (Hỗ trợ cộng dồn và xóa tỉa)
     getImages: async (productId) => {
         const [rows] = await pool.query(
             `SELECT * FROM product_image WHERE product_id = ?`,
@@ -75,6 +77,26 @@ const Product = {
         return rows;
     },
 
+    addImage: async (productId, image, alt = null, title = null) => {
+        await pool.query(
+            `INSERT INTO product_image (product_id, image, alt, title) VALUES (?, ?, ?, ?)`,
+            [productId, image, alt, title]
+        );
+    },
+    // 🟢 HÀM XÓA TỈA (Sửa lại tên biến pool và cú pháp)
+    deleteSpecificImages: async (imageIds) => {
+        // imageIds là mảng [1, 2, 5...] 
+        const sql = "DELETE FROM product_image WHERE id IN (?)";
+        // Dùng pool chứ không dùng db nhé đại ca!
+        const [result] = await pool.query(sql, [imageIds]);
+        return result.affectedRows;
+    },
+
+    deleteImages: async (productId) => {
+        await pool.query(`DELETE FROM product_image WHERE product_id = ?`, [productId]);
+    },
+
+    // 🟢 3. QUẢN LÝ THUỘC TÍNH (ENGINEERING SPECS)
     getAttributes: async (productId) => {
         const [rows] = await pool.query(
             `SELECT pa.*, a.name as attribute_name 
@@ -86,16 +108,18 @@ const Product = {
         return rows;
     },
 
-    getRelated: async (categoryId, excludeId, limit = 4) => {
-        const [rows] = await pool.query(
-            `SELECT * FROM product 
-             WHERE category_id = ? AND id != ? AND status = 1 
-             ORDER BY created_at DESC LIMIT ?`,
-            [categoryId, excludeId, limit]
+    addAttribute: async (productId, attributeId, value) => {
+        await pool.query(
+            `INSERT INTO product_attribute (product_id, attribute_id, value) VALUES (?, ?, ?)`,
+            [productId, attributeId, value]
         );
-        return rows;
     },
 
+    deleteAttributes: async (productId) => {
+        await pool.query(`DELETE FROM product_attribute WHERE product_id = ?`, [productId]);
+    },
+
+    // 🟢 4. CẬP NHẬT DỮ LIỆU CỐT LÕI
     create: async (data) => {
         const { category_id, name, slug, thumbnail, content, description, standard, application, created_by = 1 } = data;
         const [result] = await pool.query(
@@ -140,26 +164,14 @@ const Product = {
         return rows.length > 0;
     },
 
-    addImage: async (productId, image, alt = null, title = null) => {
-        await pool.query(
-            `INSERT INTO product_image (product_id, image, alt, title) VALUES (?, ?, ?, ?)`,
-            [productId, image, alt, title]
+    getRelated: async (categoryId, excludeId, limit = 4) => {
+        const [rows] = await pool.query(
+            `SELECT * FROM product 
+             WHERE category_id = ? AND id != ? AND status = 1 
+             ORDER BY created_at DESC LIMIT ?`,
+            [categoryId, excludeId, limit]
         );
-    },
-
-    deleteImages: async (productId) => {
-        await pool.query(`DELETE FROM product_image WHERE product_id = ?`, [productId]);
-    },
-
-    addAttribute: async (productId, attributeId, value) => {
-        await pool.query(
-            `INSERT INTO product_attribute (product_id, attribute_id, value) VALUES (?, ?, ?)`,
-            [productId, attributeId, value]
-        );
-    },
-
-    deleteAttributes: async (productId) => {
-        await pool.query(`DELETE FROM product_attribute WHERE product_id = ?`, [productId]);
+        return rows;
     }
 };
 

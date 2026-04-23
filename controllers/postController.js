@@ -120,7 +120,9 @@ const postController = {
             }
 
 
-            await postService.update(id, payload);
+            const updateData = { ...req.body };
+            // 🟢 Truyền thêm req.file vào tham số thứ 3
+            await postService.update(req.params.id, updateData, req.file);
 
             res.status(200).json({ success: true, message: 'Cập nhật bài viết thành công' });
         } catch (error) {

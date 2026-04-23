@@ -1,6 +1,7 @@
 const Post = require('../models/postModel');
 const PostCategory = require('../models/postCategoryModel');
 const { toSlug } = require('../utils/helpers');
+const { deleteFile } = require('../utils/fileHelpers'); // 🟢 Triệu hồi chổi quét rác
 
 const postService = {
 
@@ -52,7 +53,8 @@ const postService = {
         return await Post.getBySlug(slug);
     },
 
-    store: async (data) => {
+    // 🟢 THÊM MỚI BÀI VIẾT
+    store: async (data, file) => {
         let slug = data.slug || toSlug(data.title);
         let exists = await Post.slugExists(slug);
         let counter = 1;
@@ -63,19 +65,40 @@ const postService = {
             counter++;
         }
         const payload = { ...data, slug: newSlug };
+
+        // Nếu có upload ảnh thì gán vào payload
+        if (file) {
+            payload.image = file.filename;
+        }
+
         return await Post.create(payload);
     },
 
 
-    update: async (id, data) => {
+    // 🟢 CẬP NHẬT BÀI VIẾT (Xử lý dọn rác ảnh cũ)
+    update: async (id, data, file) => {
+        const updateData = { ...data };
+        delete updateData._method;
 
-        if (data.slug) {
-            const exists = await Post.slugExists(data.slug, id);
+        // 🗑️ DỌN RÁC VẬT LÝ KHI THAY ẢNH
+        if (file) {
+            // 1. Lấy bài viết cũ để tìm tên ảnh hiện tại
+            const oldPost = await Post.getById(id);
+            if (oldPost && oldPost.image) {
+                // 2. Xóa file ảnh cũ trong thư mục uploads
+                await deleteFile(oldPost.image);
+            }
+            // 3. Cập nhật tên ảnh mới
+            updateData.image = file.filename;
+        }
+
+        if (updateData.slug) {
+            const exists = await Post.slugExists(updateData.slug, id);
             if (exists) throw new Error('Slug đã tồn tại');
         }
 
-        if (data.title && !data.slug) {
-            let slug = toSlug(data.title);
+        if (updateData.title && !updateData.slug) {
+            let slug = toSlug(updateData.title);
             let exists = await Post.slugExists(slug, id);
             let counter = 1;
             let newSlug = slug;
@@ -84,14 +107,23 @@ const postService = {
                 exists = await Post.slugExists(newSlug, id);
                 counter++;
             }
-            data.slug = newSlug;
+            updateData.slug = newSlug;
         }
 
-        const affected = await Post.update(id, data);
-        if (!affected) throw new Error('Không tìm thấy bài viết');
+        const affected = await Post.update(id, updateData);
+        if (!affected) throw new Error('Không tìm thấy bài viết hoặc dữ liệu không đổi');
     },
 
+    // 🟢 XÓA BÀI VIẾT (Dọn sạch cả DB lẫn File)
     destroy: async (id) => {
+        // 1. Tìm thông tin bài viết để lấy tên ảnh
+        const post = await Post.getById(id);
+        if (post && post.image) {
+            // 2. Xóa file vật lý
+            await deleteFile(post.image);
+        }
+
+        // 3. Xóa bản ghi trong DB
         const affected = await Post.delete(id);
         if (!affected) throw new Error('Không tìm thấy bài viết');
     }

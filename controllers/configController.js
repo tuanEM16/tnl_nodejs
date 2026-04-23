@@ -28,7 +28,7 @@ const configController = {
 
             delete updateData._method;
 
-            await configService.update(updateData);
+            await configService.update(updateData, req.files);
             res.status(200).json({ success: true, message: 'Cập nhật cấu hình thành công' });
         } catch (error) {
             console.error("Lỗi Config Update:", error);

@@ -17,7 +17,7 @@ const userController = {
             // maxAge: 15 * 60 * 1000
             // maxAge: 10 * 1000
             // Set Access Token (15 phút)
-            res.cookie('token', accessToken, { ...cookieOptions, maxAge: 10 * 1000});
+            res.cookie('token', accessToken, { ...cookieOptions, maxAge: 1 * 60 * 60 * 1000 });
             // Set Refresh Token (7 ngày)
             res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 4 * 60 * 60 * 1000 });
 
@@ -43,7 +43,7 @@ const userController = {
             };
 
             // Xoay vòng cặp token mới
-            res.cookie('token', accessToken, { ...cookieOptions, maxAge: 10 * 1000 });
+            res.cookie('token', accessToken, { ...cookieOptions, maxAge: 1 * 60 * 60 * 1000 });
             res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 4 * 60 * 60 * 1000 });
 
             res.json({ success: true });
@@ -102,7 +102,7 @@ const userController = {
             if (!updateData.password || updateData.password.trim() === "") {
                 delete updateData.password;
             }
-            await userService.update(req.params.id, updateData, req.user.id);
+            await userService.update(req.params.id, req.body, req.file);
             res.json({ success: true, message: 'Cập nhật thành công!' });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });

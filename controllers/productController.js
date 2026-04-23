@@ -83,33 +83,24 @@ const productController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
-
-
-
-
+    // controllers/productController.js
     update: async (req, res) => {
         try {
             const updateData = { ...req.body };
 
-
-            delete updateData._method;
-            delete updateData.attributes;
-
-
-
-            if (req.file) {
-                updateData.thumbnail = req.file.filename; // Gán tên file thật vào
-            } else {
-
-
-                delete updateData.thumbnail;
+            // 🟢 SỬA LỖI THUMBNAIL: Vì dùng upload.fields nên phải bốc thế này
+            if (req.files && req.files['thumbnail']) {
+                updateData.thumbnail = req.files['thumbnail'][0].filename;
             }
+
+            // 🟢 QUAN TRỌNG: Không được delete attributes ở đây 
+            // vì Service cần nó để biết có nên update thuộc tính hay không
+            // delete updateData.attributes; <-- BỎ DÒNG NÀY ĐI
 
             await productService.update(req.params.id, updateData, req.files);
             res.status(200).json({ success: true, message: 'Cập nhật thành công' });
         } catch (error) {
-            res.status(400).json({ success: false, message: error.message });
+            res.status(500).json({ success: false, message: error.message });
         }
     },
 
