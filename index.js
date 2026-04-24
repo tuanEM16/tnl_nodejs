@@ -19,7 +19,6 @@ app.use(cors({
 
 // 🟢 3. Lắp cảm biến Cookie (Phải đặt TRƯỚC router)
 app.use(cookieParser()); 
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

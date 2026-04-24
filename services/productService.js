@@ -4,7 +4,7 @@ const { toSlug } = require('../utils/helpers');
 const { deleteFile } = require('../utils/fileHelpers');
 const pool = require('../config/db');
 const productService = {
-index: async (filters) => {
+    index: async (filters) => {
         return await Product.getAll(filters);
     },
 
@@ -15,7 +15,34 @@ index: async (filters) => {
         product.attributes = await Product.getAttributes(id);
         return product;
     },
+    showBySlug: async (slug) => {
+        // 1. Lấy thông tin cơ bản sản phẩm và tên danh mục
+        const productQuery = `
+            SELECT p.*, c.name as category_name 
+            FROM product p 
+            LEFT JOIN category c ON p.category_id = c.id 
+            WHERE p.slug = ? AND p.status = 1
+        `;
+        const [products] = await pool.execute(productQuery, [slug]);
 
+        if (products.length === 0) return null;
+
+        const product = products[0];
+
+        // 2. Lấy danh sách thuộc tính động (Quy cách, Mác thép...) từ bảng product_attribute
+        const attrQuery = `
+            SELECT a.name, pa.value 
+            FROM product_attribute pa 
+            JOIN attribute a ON pa.attribute_id = a.id 
+            WHERE pa.product_id = ?
+        `;
+        const [attributes] = await pool.execute(attrQuery, [product.id]);
+
+        // Gộp thuộc tính vào đối tượng sản phẩm
+        product.attributes = attributes;
+
+        return product;
+    },
     store: async (data, files) => {
         // Logic xử lý slug (Giữ nguyên)
         let slug = data.slug || toSlug(data.name);
@@ -103,7 +130,7 @@ index: async (filters) => {
                 if (Array.isArray(ids) && ids.length > 0) {
                     // Lấy tên file trước khi xóa bản ghi
                     const [imagesInDb] = await pool.query("SELECT image FROM product_image WHERE id IN (?)", [ids]);
-                    
+
                     await Product.deleteSpecificImages(ids); // Xóa trong DB
 
                     for (const img of imagesInDb) {
@@ -140,7 +167,7 @@ index: async (filters) => {
         // Dọn sạch album ảnh phụ (File + DB)
         const images = await Product.getImages(id);
         for (const img of images) { await deleteFile(img.image); }
-        
+
         // Dọn thumbnail chính (File)
         const product = await Product.getById(id);
         if (product && product.thumbnail) { await deleteFile(product.thumbnail); }
