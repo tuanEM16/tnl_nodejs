@@ -1,12 +1,16 @@
 const pool = require('../config/db');
 
 const Post = {
+    // 1. LẤY DANH SÁCH (Cập nhật để lọc theo Vị trí trang tĩnh)
     getAll: async (filters = {}) => {
-        let sql = `SELECT p.*, pc.name as category_name, pc.slug as category_slug 
+        let sql = `SELECT p.*, pc.name as category_name, ppc.name as page_category_name 
                    FROM post p 
                    LEFT JOIN post_category pc ON p.category_id = pc.id 
-                   WHERE p.status = 1`;
+                   LEFT JOIN post_page_category ppc ON p.page_category_id = ppc.id 
+                   WHERE p.status = 1`; // Nếu đại ca muốn hiện cả bài ẩn thì bỏ đoạn WHERE này
+
         const params = [];
+
         if (filters.post_type) {
             sql += ` AND p.post_type = ?`;
             params.push(filters.post_type);
@@ -15,11 +19,23 @@ const Post = {
             sql += ` AND p.category_id = ?`;
             params.push(filters.category_id);
         }
+        if (filters.page_slug) {
+        sql += ` AND ppc.slug = ?`;
+        params.push(filters.page_slug);
+    }
+        // 🟢 THÊM LỌC THEO VỊ TRÍ TRANG TĨNH
+        if (filters.page_category_id) {
+            sql += ` AND p.page_category_id = ?`;
+            params.push(filters.page_category_id);
+        }
         if (filters.keyword) {
             sql += ` AND p.title LIKE ?`;
             params.push(`%${filters.keyword}%`);
         }
-        sql += ` ORDER BY p.created_at DESC`;
+
+        // 🔴 QUAN TRỌNG: Sắp xếp theo thứ tự kéo thả sort_order
+        sql += ` ORDER BY p.sort_order ASC, p.created_at DESC`;
+
         if (filters.limit) {
             sql += ` LIMIT ?`;
             params.push(parseInt(filters.limit));
@@ -32,39 +48,45 @@ const Post = {
         return rows;
     },
 
-    getById: async (id) => {
-        const [rows] = await pool.query(
-            `SELECT p.*, pc.name as category_name, pc.slug as category_slug 
-             FROM post p 
-             LEFT JOIN post_category pc ON p.category_id = pc.id 
-             WHERE p.id = ?`,
-            [id]
-        );
-        return rows[0];
-    },
-
-    getBySlug: async (slug) => {
-        const [rows] = await pool.query(
-            `SELECT p.*, pc.name as category_name, pc.slug as category_slug 
-             FROM post p 
-             LEFT JOIN post_category pc ON p.category_id = pc.id 
-             WHERE p.slug = ? AND p.status = 1`,
-            [slug]
-        );
-        return rows[0];
-    },
-
+    // 2. TẠO MỚI (Bổ sung cột còn thiếu)
     create: async (data) => {
-        const { category_id, title, slug, image, content, description, post_type = 'post', created_by = 1 } = data;
+        const {
+            category_id,
+            page_category_id, // 🟢 Nhận thêm thằng này
+            title,
+            slug,
+            image,
+            content,
+            description,
+            post_type = 'post',
+            created_by = 1,
+            sort_order = 0 // 🟢 Mặc định là 0
+        } = data;
+
+        // 🔴 PHẢI THÊM page_category_id VÀ sort_order VÀO ĐÂY
         const [result] = await pool.query(
-            `INSERT INTO post (category_id, title, slug, image, content, description, post_type, created_at, created_by, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, 1)`,
-            [category_id || null, title, slug, image || null, content, description || null, post_type, created_by]
+            `INSERT INTO post (
+                category_id, page_category_id, title, slug, image, 
+                content, description, post_type, created_at, created_by, 
+                sort_order, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, 1)`,
+            [
+                category_id || null,
+                page_category_id || null, // 🟢 Đẩy vào DB
+                title,
+                slug,
+                image || null,
+                content,
+                description || null,
+                post_type,
+                created_by,
+                sort_order
+            ]
         );
         return result.insertId;
     },
 
-
+    // 3. CẬP NHẬT (Hàm này dùng động nên thường sẽ tự nhận nếu key đúng)
     update: async (id, data) => {
         const fields = [];
         const values = [];
@@ -84,6 +106,31 @@ const Post = {
         return result.affectedRows;
     },
 
+// models/postModel.js
+
+    getById: async (id) => {
+        const [rows] = await pool.query(
+            `SELECT p.*, pc.name as category_name, ppc.name as page_category_name 
+             FROM post p 
+             LEFT JOIN post_category pc ON p.category_id = pc.id 
+             LEFT JOIN post_page_category ppc ON p.page_category_id = ppc.id 
+             WHERE p.id = ?`,
+            [id]
+        );
+        return rows[0];
+    },
+
+    getBySlug: async (slug) => {
+        const [rows] = await pool.query(
+            `SELECT p.*, pc.name as category_name, ppc.name as page_category_name 
+             FROM post p 
+             LEFT JOIN post_category pc ON p.category_id = pc.id 
+             LEFT JOIN post_page_category ppc ON p.page_category_id = ppc.id 
+             WHERE p.slug = ? AND p.status = 1`,
+            [slug]
+        );
+        return rows[0];
+    },
     delete: async (id) => {
         const [result] = await pool.query(`UPDATE post SET status = 0 WHERE id = ?`, [id]);
         return result.affectedRows;

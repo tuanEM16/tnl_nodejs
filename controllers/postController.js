@@ -1,5 +1,5 @@
 const postService = require('../services/postService');
-
+const db = require('../config/db');
 const postController = {
 
     getCategories: async (req, res) => {
@@ -29,6 +29,32 @@ const postController = {
         }
     },
 
+    updateOrder: async (req, res) => {
+        try {
+            const { ids } = req.body;
+
+            if (!ids || !Array.isArray(ids)) {
+                return res.status(400).json({ success: true, message: "Dữ liệu không hợp lệ!" });
+            }
+
+            // 🟢 ĐẨY XỬ LÝ SANG SERVICE (Giống các hàm khác của đại ca)
+            await postService.updateOrder(ids);
+
+            res.json({ success: true, message: "Đã chốt vị trí thép thành công!" });
+        } catch (error) {
+            console.error("❌ LỖI REORDER:", error.message);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+    // Thêm hàm này vào controller
+    getPageCategories: async (req, res) => {
+        try {
+            const [rows] = await db.query('SELECT * FROM post_page_category WHERE status = 1');
+            res.json({ success: true, data: rows });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
     destroyCategory: async (req, res) => {
         try {
             await postService.destroyCategory(req.params.id);
@@ -43,8 +69,10 @@ const postController = {
         try {
             const filters = {
                 post_type: req.query.post_type,
+                page_slug: req.query.page_slug,
                 category_id: req.query.category_id,
                 keyword: req.query.keyword,
+                page_category_id: req.query.page_category_id,
                 limit: req.query.limit || 20,
                 offset: req.query.offset || 0
             };
@@ -54,7 +82,36 @@ const postController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+    // controllers/postController.js
 
+    storePageCategory: async (req, res) => {
+        try {
+            const { name } = req.body;
+            // Tự tạo slug sạch sẽ để FE gọi cho sướng
+            const slug = name.toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^\w\s]/gi, '').replace(/\s+/g, '_');
+
+            // 🔴 Đẩy vào đúng bảng post_page_category
+            const [result] = await db.query(
+                'INSERT INTO post_page_category (name, slug, status) VALUES (?, ?, 1)',
+                [name, slug]
+            );
+
+            res.status(201).json({ success: true, message: 'ĐÃ THÊM VỊ TRÍ MỚI', id: result.insertId });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+    // 🟢 Tiêu hủy danh mục trang tĩnh
+    destroyPageCategory: async (req, res) => {
+        try {
+            await db.query('DELETE FROM post_page_category WHERE id = ?', [req.params.id]);
+            res.json({ success: true, message: 'ĐÃ XÓA VỊ TRÍ' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
 
     store: async (req, res) => {
         try {

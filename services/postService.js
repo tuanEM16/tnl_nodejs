@@ -2,7 +2,7 @@ const Post = require('../models/postModel');
 const PostCategory = require('../models/postCategoryModel');
 const { toSlug } = require('../utils/helpers');
 const { deleteFile } = require('../utils/fileHelpers'); // 🟢 Triệu hồi chổi quét rác
-
+const db = require('../config/db');
 const postService = {
 
     getCategories: async () => {
@@ -25,7 +25,16 @@ const postService = {
         }
         return await PostCategory.create({ ...data, slug: newSlug });
     },
-
+    updateOrder: async (ids) => {
+        // Chạy vòng lặp để cập nhật sort_order theo mảng ID gửi lên
+        for (let i = 0; i < ids.length; i++) {
+            await db.query(
+                'UPDATE post SET sort_order = ? WHERE id = ?',
+                [i, ids[i]]
+            );
+        }
+        return true;
+    },
     updateCategory: async (id, data) => {
         if (data.slug) {
             const exists = await PostCategory.slugExists(data.slug, id);
@@ -39,10 +48,24 @@ const postService = {
         const affected = await PostCategory.delete(id);
         if (!affected) throw new Error('Không tìm thấy danh mục');
     },
-
-
+    getPostByPageSlug: async (slug) => {
+        const query = `
+            SELECT p.* FROM post p
+            JOIN post_page_category ppc ON p.page_category_id = ppc.id
+            WHERE ppc.slug = ? 
+            AND p.post_type = 'page' 
+            AND p.status = 1
+            ORDER BY p.sort_order ASC
+        `;
+        const [rows] = await db.query(query, [slug]);
+        return rows; // Trả về mảng các bài viết thuộc Slot đó
+    },
     index: async (filters) => {
-        return await Post.getAll(filters);
+        // Chỉ cần gọi Model Post.getAll là đủ. 
+        // Vì trong Model má đã chỉ đại ca viết lệnh JOIN để bốc Tên Danh Mục rồi
+        const rows = await Post.getAll(filters);
+
+        return rows; // Trả về kết quả có đầy đủ category_name và page_category_name
     },
 
     show: async (id) => {
@@ -113,19 +136,27 @@ const postService = {
         const affected = await Post.update(id, updateData);
         if (!affected) throw new Error('Không tìm thấy bài viết hoặc dữ liệu không đổi');
     },
+    // services/postService.js
 
-    // 🟢 XÓA BÀI VIẾT (Dọn sạch cả DB lẫn File)
+    // 🟢 XÓA BÀI VIẾT (Bản chuẩn không lỗi)
     destroy: async (id) => {
         // 1. Tìm thông tin bài viết để lấy tên ảnh
         const post = await Post.getById(id);
+
         if (post && post.image) {
             // 2. Xóa file vật lý
             await deleteFile(post.image);
         }
 
-        // 3. Xóa bản ghi trong DB
-        const affected = await Post.delete(id);
-        if (!affected) throw new Error('Không tìm thấy bài viết');
+        // 3. Xóa bản ghi và kiểm tra affectedRows thực tế
+        const [result] = await db.query('DELETE FROM post WHERE id = ?', [id]);
+
+        // 🔴 ĐOẠN NÀY LÀ MẤU CHỐT: Phải kiểm tra affectedRows > 0
+        if (result.affectedRows === 0) {
+            throw new Error('Không tìm thấy bài viết trong Database để xóa!');
+        }
+
+        return true;
     }
 };
 

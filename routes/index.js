@@ -8,6 +8,12 @@ const configRoutes = require('./configRoutes');
 const contactRoutes = require('./contactRoutes');
 const postRoutes = require('./postRoutes');
 const menuRoutes = require('./menuRoutes');
+const certificateRoutes = require('./certificateRoutes');
+const partnerRoutes = require('./partnerRoutes');
+
+
+router.use('/certificates', certificateRoutes);
+router.use('/partners', partnerRoutes);
 router.use(bannerRoutes);
 router.use(categoryRoutes);
 router.use(productRoutes);
