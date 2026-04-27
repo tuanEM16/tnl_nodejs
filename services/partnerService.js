@@ -1,38 +1,49 @@
-import api from '@/lib/api';
-const { deleteFile } = require('../utils/fileHelpers'); 
+// services/partnerService.js (BACKEND)
 
-export const partnerService = {
-    getAll: async () => {
-        const res = await api.get('/partners');
-        return res.data;
+const Partner = require('../models/partnerModel');
+const { deleteFile } = require('../utils/fileHelpers');
+const db = require('../config/db');
+
+const partnerService = {
+    // 🟢 ĐỔI: Gọi Model chứ đéo sài api.get ở đây
+    index: async () => {
+        return await Partner.getAll();
     },
 
-    getById: async (id) => {
-        const res = await api.get(`/partners/${id}`);
-        return res.data;
+    // 🟢 ĐỔI: Tên hàm là show (để khớp với Controller của đại ca)
+    show: async (id) => {
+        return await Partner.getById(id);
     },
 
-    create: async (formData) => {
-        const res = await api.post('/partners', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        return res.data;
+    // 🟢 ĐỔI: Tên hàm là store (để khớp với Controller)
+    store: async (data, file) => {
+        const payload = { ...data };
+        if (file) {
+            payload.logo = file.filename;
+        }
+        return await Partner.create(payload);
     },
 
-    update: async (id, formData) => {
-        const res = await api.put(`/partners/${id}`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        return res.data;
+    update: async (id, data, file) => {
+        const updateData = { ...data };
+        if (file) {
+            const oldItem = await Partner.getById(id);
+            if (oldItem && oldItem.logo) {
+                await deleteFile(oldItem.logo);
+            }
+            updateData.logo = file.filename;
+        }
+        return await Partner.update(id, updateData);
     },
+
     delete: async (id) => {
         const item = await Partner.getById(id);
         if (item && item.logo) {
             await deleteFile(item.logo);
         }
-        const [result] = await db.query('DELETE FROM partners WHERE id = ?', [id]);
-        return result.affectedRows > 0;
-    },
-
-    updateOrder: (ids) => api.put('/partners/reorder', { ids }).then(res => res.data),
+        // Gọi hàm xóa trong Model (Model chỉ việc xóa DB)
+        return await Partner.delete(id);
+    }
 };
+
+module.exports = partnerService;

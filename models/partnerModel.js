@@ -1,5 +1,7 @@
+// models/partnerModel.js (BACKEND)
+
 const pool = require('../config/db');
-const { deleteFile } = require('../utils/fileHelpers');
+
 const Partner = {
     getAll: async () => {
         const [rows] = await pool.query('SELECT * FROM partners ORDER BY sort_order ASC, created_at DESC');
@@ -16,22 +18,10 @@ const Partner = {
     update: async (id, data) => {
         return await pool.query('UPDATE partners SET ? WHERE id = ?', [data, id]);
     },
-    destroy: async (id) => {
-        const [rows] = await pool.query('SELECT logo FROM partners WHERE id = ?', [id]);
-        const item = rows[0];
-
-        if (item && item.logo) {
-            await deleteFile(item.logo);
-        }
-
+    delete: async (id) => {
+        // Chỉ xóa trong Database thôi, file đã được Service xóa rồi
         const [result] = await pool.query('DELETE FROM partners WHERE id = ?', [id]);
         return result.affectedRows > 0;
-    },
-    updateOrder: async (ids) => {
-        const queries = ids.map((id, index) =>
-            pool.query('UPDATE partners SET sort_order = ? WHERE id = ?', [index, id])
-        );
-        return await Promise.all(queries);
     }
 };
 

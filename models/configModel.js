@@ -1,3 +1,4 @@
+// models/Config.js
 const pool = require('../config/db');
 
 const Config = {
@@ -18,18 +19,28 @@ const Config = {
         metaRows.forEach(row => {
             meta[row.meta_key] = row.meta_value;
         });
-        return { ...fixed, ...meta };
+        // Trả về cả mảng meta để frontend dễ dùng .find()
+        return { ...fixed, meta: metaRows }; 
     },
 
+    // 🟢 HÀM SIẾT ỐC: Tự động lọc cột và update
     updateFixed: async (data) => {
+        const allowedColumns = [
+            'site_name', 'slogan', 'logo', 'favicon', 'email', 
+            'phone', 'hotline', 'address', 'map_embed', 
+            'facebook', 'youtube', 'meta_title', 'meta_description'
+        ];
+
         const fields = [];
         const values = [];
+
         Object.keys(data).forEach(key => {
-            if (data[key] !== undefined) {
+            if (allowedColumns.includes(key) && data[key] !== undefined) {
                 fields.push(`${key} = ?`);
                 values.push(data[key]);
             }
         });
+
         if (fields.length === 0) return;
         values.push(1);
         await pool.query(`UPDATE config SET ${fields.join(', ')}, updated_at = NOW() WHERE id = ?`, values);
@@ -42,10 +53,6 @@ const Config = {
              ON DUPLICATE KEY UPDATE meta_value = VALUES(meta_value), updated_at = NOW()`,
             [key, value]
         );
-    },
-
-    deleteMeta: async (key) => {
-        await pool.query(`DELETE FROM config_meta WHERE config_id = 1 AND meta_key = ?`, [key]);
     }
 };
 

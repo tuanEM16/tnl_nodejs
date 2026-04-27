@@ -6,6 +6,7 @@ const upload = require('../middleware/uploadMiddleware');
 router.get('/config', configController.show);
 router.put('/config', authMiddleware, upload.fields([
     { name: 'logo', maxCount: 1 },
-    { name: 'favicon', maxCount: 1 }
+    { name: 'favicon', maxCount: 1 },
+    { name: 'intro_video', maxCount: 1 }
 ]), configController.update);
 module.exports = router;
