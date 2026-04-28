@@ -4,8 +4,18 @@ const { toSlug } = require('../utils/helpers');
 const { deleteFile } = require('../utils/fileHelpers');
 const pool = require('../config/db');
 const productService = {
-    index: async (filters) => {
-        return await Product.getAll(filters);
+   index: async (filters) => {
+        // 1. Bốc danh sách sản phẩm cơ bản từ Model
+        const products = await Product.getAll(filters);
+
+        // 🟢 2. SIẾT NỘI CÔNG: Bổ sung attributes cho từng sản phẩm trong mảng
+        // Dùng Promise.all để bốc hàng loạt cho tốc độ nhanh như điện
+        const productsWithAttributes = await Promise.all(products.map(async (product) => {
+            const attrs = await Product.getAttributes(product.id);
+            return { ...product, attributes: attrs };
+        }));
+
+        return productsWithAttributes;
     },
 
     show: async (id) => {
