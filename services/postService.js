@@ -1,8 +1,11 @@
 const Post = require('../models/postModel');
 const PostCategory = require('../models/postCategoryModel');
 const { toSlug } = require('../utils/helpers');
-const { deleteFile } = require('../utils/fileHelpers'); // 🟢 Triệu hồi chổi quét rác
+const { deleteFile, extractImagesFromContent } = require('../utils/fileHelpers');
+const PostImage = require('../models/postImageModel');
 const db = require('../config/db');
+
+
 const postService = {
 
     getCategories: async () => {
@@ -76,42 +79,72 @@ const postService = {
         return await Post.getBySlug(slug);
     },
 
-    // 🟢 THÊM MỚI BÀI VIẾT
     store: async (data, file) => {
+
         let slug = data.slug || toSlug(data.title);
+
         let exists = await Post.slugExists(slug);
+
         let counter = 1;
+
         let newSlug = slug;
+
         while (exists) {
+
             newSlug = `${slug}-${counter}`;
+
             exists = await Post.slugExists(newSlug);
+
             counter++;
+
         }
+
         const payload = { ...data, slug: newSlug };
 
-        // Nếu có upload ảnh thì gán vào payload
-        if (file) {
-            payload.image = file.filename;
+        if (file) payload.image = file.filename;
+
+
+
+        // 🟢 BƯỚC 1: Phải await để thằng DB nó tạo xong bài viết và nhả ID ra
+
+        const postId = await Post.create(payload);
+
+
+
+        if (!postId) {
+
+            throw new Error("Lỗi hệ thống: Đéo bốc được Post ID mới!");
+
         }
 
-        return await Post.create(payload);
+
+
+        // 🟢 BƯỚC 3: Đồng bộ ảnh gallery (Dùng cái postId vừa bốc được)
+
+        const contentImages = extractImagesFromContent(data.content);
+
+        if (contentImages.length > 0) {
+
+            // Phải có await ở đây để nó chạy xong mới trả kết quả về Controller
+
+            await PostImage.bulkInsert(postId, contentImages);
+
+        }
+
+
+
+        return { insertId: postId };
+
     },
 
-
-    // 🟢 CẬP NHẬT BÀI VIẾT (Xử lý dọn rác ảnh cũ)
+    // ✅ CẬP NHẬT — sync lại post_images khi edit
     update: async (id, data, file) => {
         const updateData = { ...data };
         delete updateData._method;
 
-        // 🗑️ DỌN RÁC VẬT LÝ KHI THAY ẢNH
         if (file) {
-            // 1. Lấy bài viết cũ để tìm tên ảnh hiện tại
             const oldPost = await Post.getById(id);
-            if (oldPost && oldPost.image) {
-                // 2. Xóa file ảnh cũ trong thư mục uploads
-                await deleteFile(oldPost.image);
-            }
-            // 3. Cập nhật tên ảnh mới
+            if (oldPost && oldPost.image) await deleteFile(oldPost.image);
             updateData.image = file.filename;
         }
 
@@ -135,29 +168,42 @@ const postService = {
 
         const affected = await Post.update(id, updateData);
         if (!affected) throw new Error('Không tìm thấy bài viết hoặc dữ liệu không đổi');
-    },
-    // services/postService.js
 
-    // 🟢 XÓA BÀI VIẾT (Bản chuẩn không lỗi)
+        // ✅ Sync post_images: xóa cũ → xóa file vật lý không còn dùng → insert mới
+        if (updateData.content !== undefined) {
+            const oldFilenames = await PostImage.deleteByPostId(id);
+            const newFilenames = extractImagesFromContent(updateData.content);
+
+            // Xóa file vật lý những ảnh không còn trong content
+            const removed = oldFilenames.filter(f => !newFilenames.includes(f));
+            for (const filename of removed) {
+                await deleteFile(filename);
+            }
+
+            if (newFilenames.length) {
+                await PostImage.bulkInsert(id, newFilenames);
+            }
+        }
+    },
+
+    // ✅ XÓA — dọn luôn ảnh content (CASCADE xóa DB, còn phải xóa file vật lý)
     destroy: async (id) => {
-        // 1. Tìm thông tin bài viết để lấy tên ảnh
         const post = await Post.getById(id);
 
-        if (post && post.image) {
-            // 2. Xóa file vật lý
-            await deleteFile(post.image);
+        // Xóa ảnh bìa
+        if (post && post.image) await deleteFile(post.image);
+
+        // Xóa ảnh nội dung vật lý
+        const contentImages = await PostImage.deleteByPostId(id);
+        for (const filename of contentImages) {
+            await deleteFile(filename);
         }
 
-        // 3. Xóa bản ghi và kiểm tra affectedRows thực tế
         const [result] = await db.query('DELETE FROM post WHERE id = ?', [id]);
-
-        // 🔴 ĐOẠN NÀY LÀ MẤU CHỐT: Phải kiểm tra affectedRows > 0
-        if (result.affectedRows === 0) {
-            throw new Error('Không tìm thấy bài viết trong Database để xóa!');
-        }
+        if (result.affectedRows === 0) throw new Error('Không tìm thấy bài viết trong Database để xóa!');
 
         return true;
-    }
+    },
 };
 
 module.exports = postService;

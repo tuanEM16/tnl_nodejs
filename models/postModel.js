@@ -7,7 +7,7 @@ const Post = {
                    FROM post p 
                    LEFT JOIN post_category pc ON p.category_id = pc.id 
                    LEFT JOIN post_page_category ppc ON p.page_category_id = ppc.id 
-                   WHERE p.status = 1`; // Nếu đại ca muốn hiện cả bài ẩn thì bỏ đoạn WHERE này
+                   WHERE p.status = 1`; 
 
         const params = [];
 

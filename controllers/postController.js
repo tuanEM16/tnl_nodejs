@@ -113,21 +113,18 @@ const postController = {
         }
     },
 
+    // be_nodejs/controllers/postController.js
+
     store: async (req, res) => {
         try {
+            // 🟢 CHỈNH LẠI: Truyền thẳng body và file sang Service xử lý cho đồng bộ
+            const result = await postService.store(req.body, req.file);
 
-            const image = req.file ? req.file.filename : null;
-
-
-            const payload = {
-                ...req.body,
-                image: image,
-
-                created_by: req.user?.id || 1
-            };
-
-            const id = await postService.store(payload);
-            res.status(201).json({ success: true, message: 'Thêm bài viết thành công', id });
+            res.status(201).json({
+                success: true,
+                message: 'Đã chốt bài viết mới thành công!',
+                id: result.insertId
+            });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
@@ -194,7 +191,16 @@ const postController = {
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
-    }
+    },
+    uploadContentImage: async (req, res) => {
+        try {
+            if (!req.file) return res.status(400).json({ success: false, message: 'Đéo thấy file đâu!' });
+
+            res.json({ filename: req.file.filename });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
 };
 
 module.exports = postController;

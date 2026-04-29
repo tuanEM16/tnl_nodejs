@@ -2,6 +2,7 @@ Folder PATH listing for volume New Volume
 Volume serial number is EAE3-723B
 D:.
 |   .env
+|   hash.js
 |   index.js
 |   package-lock.json
 |   package.json
@@ -13,10 +14,11 @@ D:.
 +---controllers
 |       bannerController.js
 |       categoryController.js
+|       certificateController.js
 |       configController.js
 |       contactController.js
 |       menuController.js
-|       orderController.js
+|       partnerController.js
 |       postController.js
 |       productController.js
 |       userController.js
@@ -26,12 +28,16 @@ D:.
 |       uploadMiddleware.js
 |       
 +---models
+|       attributeModel.js
 |       bannerModel.js
 |       categoryModel.js
+|       certificateModel.js
 |       configModel.js
 |       contactModel.js
 |       menuModel.js
-|       orderModel.js
+|       partnerModel.js
+|       passwordResetModel.js
+|       postCategoryModel.js
 |       postModel.js
 |       productModel.js
 |       userModel.js
@@ -595,6 +601,21 @@ D:.
 |   |       README.md
 |   |       SECURITY.md
 |   |       
+|   +---cookie-parser
+|   |   |   HISTORY.md
+|   |   |   index.js
+|   |   |   LICENSE
+|   |   |   package.json
+|   |   |   README.md
+|   |   |   
+|   |   \---node_modules
+|   |       \---cookie-signature
+|   |               .npmignore
+|   |               History.md
+|   |               index.js
+|   |               package.json
+|   |               Readme.md
+|   |               
 |   +---cookie-signature
 |   |       History.md
 |   |       index.js
@@ -1583,6 +1604,99 @@ D:.
 |   |       README.md
 |   |       SECURITY.md
 |   |       
+|   +---nodemailer
+|   |   |   .gitattributes
+|   |   |   .ncurc.js
+|   |   |   .prettierignore
+|   |   |   .prettierrc
+|   |   |   .prettierrc.js
+|   |   |   .release-please-config.json
+|   |   |   CHANGELOG.md
+|   |   |   CLAUDE.md
+|   |   |   CODE_OF_CONDUCT.md
+|   |   |   eslint.config.js
+|   |   |   LICENSE
+|   |   |   package.json
+|   |   |   README.md
+|   |   |   SECURITY.txt
+|   |   |   
+|   |   \---lib
+|   |       |   errors.js
+|   |       |   nodemailer.js
+|   |       |   
+|   |       +---addressparser
+|   |       |       index.js
+|   |       |       
+|   |       +---base64
+|   |       |       index.js
+|   |       |       
+|   |       +---dkim
+|   |       |       index.js
+|   |       |       message-parser.js
+|   |       |       relaxed-body.js
+|   |       |       sign.js
+|   |       |       
+|   |       +---fetch
+|   |       |       cookies.js
+|   |       |       index.js
+|   |       |       
+|   |       +---json-transport
+|   |       |       index.js
+|   |       |       
+|   |       +---mail-composer
+|   |       |       index.js
+|   |       |       
+|   |       +---mailer
+|   |       |       index.js
+|   |       |       mail-message.js
+|   |       |       
+|   |       +---mime-funcs
+|   |       |       index.js
+|   |       |       mime-types.js
+|   |       |       
+|   |       +---mime-node
+|   |       |       index.js
+|   |       |       last-newline.js
+|   |       |       le-unix.js
+|   |       |       le-windows.js
+|   |       |       
+|   |       +---punycode
+|   |       |       index.js
+|   |       |       
+|   |       +---qp
+|   |       |       index.js
+|   |       |       
+|   |       +---sendmail-transport
+|   |       |       index.js
+|   |       |       
+|   |       +---ses-transport
+|   |       |       index.js
+|   |       |       
+|   |       +---shared
+|   |       |       index.js
+|   |       |       
+|   |       +---smtp-connection
+|   |       |       data-stream.js
+|   |       |       http-proxy-client.js
+|   |       |       index.js
+|   |       |       
+|   |       +---smtp-pool
+|   |       |       index.js
+|   |       |       pool-resource.js
+|   |       |       
+|   |       +---smtp-transport
+|   |       |       index.js
+|   |       |       
+|   |       +---stream-transport
+|   |       |       index.js
+|   |       |       
+|   |       +---well-known
+|   |       |       index.js
+|   |       |       services.json
+|   |       |       
+|   |       \---xoauth2
+|   |               index.js
+|   |               
 |   +---nodemon
 |   |   |   .prettierrc.json
 |   |   |   index.d.ts
@@ -2426,11 +2540,12 @@ D:.
 +---routes
 |       bannerRoutes.js
 |       categoryRoutes.js
+|       certificateRoutes.js
 |       configRoutes.js
 |       contactRoutes.js
 |       index.js
 |       menuRoutes.js
-|       orderRoutes.js
+|       partnerRoutes.js
 |       postRoutes.js
 |       productRoutes.js
 |       userRoutes.js
@@ -2438,15 +2553,69 @@ D:.
 +---services
 |       bannerService.js
 |       categoryService.js
+|       certificateService.js
 |       configService.js
 |       contactService.js
 |       menuService.js
-|       orderService.js
+|       partnerService.js
 |       postService.js
 |       productService.js
 |       userService.js
 |       
 +---uploads
+|       1777273187890-750481904.mp4
+|       1777338428224-833406438.jpg
+|       1777338443937-702097070.jpg
+|       1777340367891-440695058.jpg
+|       1777340378049-525071772.png
+|       1777341326721-228352046.jpg
+|       1777341338061-697369582.jpeg
+|       1777341954457-980742270.jpg
+|       1777344855326-194154219.jpg
+|       1777348640816-377132164.jpg
+|       1777363208450-998306085.jpg
+|       1777363658075-808871601.jpg
+|       1777363736612-364596656.jpg
+|       1777363761712-310212596.jpg
+|       1777363843531-797192200.jpg
+|       1777363915231-623231424.png
+|       1777363932628-76301843.jpg
+|       1777363947563-859960474.jpg
+|       1777364169288-731952602.jpg
+|       1777364182663-397186400.jpg
+|       1777364197212-71325636.jpg
+|       1777364383951-199167999.jpg
+|       1777364391486-134904505.jpg
+|       1777364398808-719436724.png
+|       1777364608855-812610661.jpg
+|       1777364616256-632984971.png
+|       1777365008140-162326379.jpg
+|       1777365016006-463176368.jpg
+|       1777365042424-688694708.jpg
+|       1777365123264-103865488.jpg
+|       1777365133478-521895669.jpg
+|       1777365143163-93534653.jpg
+|       1777365152049-468766202.jpg
+|       1777365162908-89608606.png
+|       1777365179381-401202563.jpg
+|       1777365558906-829648882.png
+|       1777365614839-518665536.jpg
+|       1777366677456-167230425.png
+|       1777366677456-562571435.png
+|       1777367633085-160797546.jpg
+|       1777367691765-609608310.jpg
+|       1777368026794-303682324.png
+|       1777368215718-386880216.jpg
+|       1777368268318-994565003.jpg
+|       1777368283693-959082050.png
+|       1777369356710-290164679.png
+|       1777369365812-756835807.jpg
+|       1777369374603-963745634.jpg
+|       1777369407657-904869106.jpg
+|       1777424114614-654472165.jpg
+|       
 \---utils
+        emailTemplates.js
+        fileHelpers.js
         helpers.js
         

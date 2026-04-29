@@ -1,37 +1,39 @@
+// be_nodejs/middleware/uploadMiddleware.js
 const multer = require('multer');
 const path = require('path');
 
+// 🟢 1. Cấu hình kho chứa và đặt tên thép
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
+  destination: (req, file, cb) => {
+    // Trỏ về thư mục uploads ngang hàng với be_nodejs
+    cb(null, 'uploads/'); 
+  },
+  filename: (req, file, cb) => {
+    cb(null,  Date.now() + path.extname(file.originalname));
+  }
 });
 
+// 🟢 2. Bộ lọc: Chỉ cho thép tốt (Ảnh & Video) đi qua
 const fileFilter = (req, file, cb) => {
-    // 🟢 MỞ RỘNG CỬA: Cho phép cả ảnh và video
-    const allowedTypes = /jpeg|jpg|png|gif|webp|mp4|webm|quicktime/; 
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+  const allowedTypes = /jpeg|jpg|png|gif|webp|mp4|webm|quicktime/;
+  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedTypes.test(file.mimetype);
 
-    if (mimetype && extname) {
-        return cb(null, true);
-    } else {
-        // 🔴 Thông báo rõ ràng để đại ca dễ bắt bệnh
-        cb(new Error('Hệ thống chỉ nhận file ảnh (jpg, png...) hoặc video (mp4, webm)!'));
-    }
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb(new Error('Hệ thống chỉ nhận file ảnh (jpg, png...) hoặc video (mp4, webm)!'));
+  }
 };
 
+// 🟢 3. Khởi tạo máy upload (Nới lỏng 100MB cho sướng)
 const upload = multer({
-    storage: storage,
-    limits: { 
-        // 🟢 NỚI LỎNG HẦM: Nâng lên 100MB để đại ca bốc video cho sướng
-        fileSize: 100 * 1024 * 1024 
-    },
-    fileFilter: fileFilter
+  storage: storage,
+  limits: { 
+    fileSize: 100 * 1024 * 1024, // 100MB cho đại ca bốc video thoải mái
+    fieldSize: 10 * 1024 * 1024  // Tránh lỗi 'S' khi content quá dài
+  },
+  fileFilter: fileFilter
 });
 
 module.exports = upload;
