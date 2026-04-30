@@ -204,6 +204,70 @@ const postService = {
 
         return true;
     },
+getAboutSections: async () => {
+        // Lấy dữ liệu thô từ Model
+        const { sections, metas } = await Post.getAboutSections();
+
+        // Xử lý logic gộp meta vào section ngay tại Service
+        const formattedSections = sections.map(section => {
+            const sectionMetas = metas.filter(m => m.section_id === section.id);
+            const metaObject = {};
+            
+            sectionMetas.forEach(m => {
+                try {
+                    // Cố gắng parse JSON (dành cho các mảng như values, events)
+                    metaObject[m.meta_key] = JSON.parse(m.meta_value);
+                } catch (e) {
+                    // Nếu là chuỗi string hoặc HTML bình thường thì giữ nguyên
+                    metaObject[m.meta_key] = m.meta_value;
+                }
+            });
+
+            return { ...section, meta: metaObject };
+        });
+
+        return formattedSections;
+    },
+
+    storeAboutSection: async (data, file) => {
+        const { name, layout, sort_order, status, ...metaData } = data;
+        const sectionData = { name, layout, sort_order, status };
+        
+        // Gắn tên file ảnh vào meta nếu có upload
+        if (file) metaData.image = file.filename;
+
+        // Gọi Model xử lý DB
+        return await Post.createAboutSection(sectionData, metaData);
+    },
+
+    updateAboutSection: async (id, data, file) => {
+        const { name, layout, sort_order, status, ...metaData } = data;
+        const sectionData = { name, layout, sort_order, status };
+
+        if (file) {
+            // Xóa file vật lý ảnh cũ trước khi cập nhật ảnh mới
+            const [oldImageRows] = await db.query('SELECT meta_value FROM about_section_meta WHERE section_id = ? AND meta_key = "image"', [id]);
+            if (oldImageRows.length > 0 && oldImageRows[0].meta_value) {
+                await deleteFile(oldImageRows[0].meta_value);
+            }
+            // Gắn tên file mới vào metaData
+            metaData.image = file.filename;
+        }
+
+        // Gọi Model xử lý DB
+        return await Post.updateAboutSection(id, sectionData, metaData);
+    },
+
+    destroyAboutSection: async (id) => {
+        // Dọn dẹp file ảnh vật lý trước khi xóa khỏi DB
+        const [oldImageRows] = await db.query('SELECT meta_value FROM about_section_meta WHERE section_id = ? AND meta_key = "image"', [id]);
+        if (oldImageRows.length > 0 && oldImageRows[0].meta_value) {
+            await deleteFile(oldImageRows[0].meta_value);
+        }
+
+        // Gọi Model xóa DB
+        return await Post.destroyAboutSection(id);
+    }
 };
 
 module.exports = postService;

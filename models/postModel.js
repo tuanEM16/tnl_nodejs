@@ -145,6 +145,86 @@ const Post = {
         }
         const [rows] = await pool.query(sql, params);
         return rows.length > 0;
+    },
+    // 🟠 BLOCK 2: ABOUT SECTIONS (TRANG GIỚI THIỆU)
+    // ==========================================
+
+    getAboutSections: async () => {
+        // Lấy 2 bảng lên, Controller/Service sẽ chịu trách nhiệm map chúng lại
+        const [sections] = await pool.query('SELECT * FROM about_section ORDER BY sort_order ASC');
+        const [metas] = await pool.query('SELECT * FROM about_section_meta');
+        return { sections, metas };
+    },
+
+    createAboutSection: async (sectionData, metaData) => {
+        const { name, layout, sort_order, status } = sectionData;
+
+        // 1. Insert vào bảng about_section
+        const [result] = await pool.query(
+            'INSERT INTO about_section (name, layout, sort_order, status, updated_at) VALUES (?, ?, ?, ?, NOW())',
+            [name, layout || 'text', sort_order || 0, status || 1]
+        );
+        const sectionId = result.insertId;
+
+        // 2. Insert vào bảng about_section_meta
+        const metaQueries = [];
+        const metaValues = [];
+        for (const [key, value] of Object.entries(metaData)) {
+            if (value) {
+                const cleanKey = key.startsWith('meta_') ? key.replace('meta_', '') : key;
+                metaQueries.push('(?, ?, ?, NOW(), NOW())');
+                metaValues.push(sectionId, cleanKey, typeof value === 'object' ? JSON.stringify(value) : value);
+            }
+        }
+
+        if (metaQueries.length > 0) {
+            await pool.query(
+                `INSERT INTO about_section_meta (section_id, meta_key, meta_value, created_at, updated_at) VALUES ${metaQueries.join(', ')}`, 
+                metaValues
+            );
+        }
+
+        return sectionId;
+    },
+
+    updateAboutSection: async (id, sectionData, metaData) => {
+        const { name, layout, sort_order, status } = sectionData;
+
+        // 1. Cập nhật bảng about_section
+        await pool.query(
+            'UPDATE about_section SET name = ?, layout = ?, sort_order = ?, status = ?, updated_at = NOW() WHERE id = ?',
+            [name, layout, sort_order, status, id]
+        );
+
+        // 2. Xóa meta cũ của section này
+        await pool.query('DELETE FROM about_section_meta WHERE section_id = ?', [id]);
+
+        // 3. Insert lại meta mới
+        const metaQueries = [];
+        const metaValues = [];
+        for (const [key, value] of Object.entries(metaData)) {
+            if (value) {
+                const cleanKey = key.startsWith('meta_') ? key.replace('meta_', '') : key;
+                metaQueries.push('(?, ?, ?, NOW(), NOW())');
+                metaValues.push(id, cleanKey, typeof value === 'object' ? JSON.stringify(value) : value);
+            }
+        }
+
+        if (metaQueries.length > 0) {
+            await pool.query(
+                `INSERT INTO about_section_meta (section_id, meta_key, meta_value, created_at, updated_at) VALUES ${metaQueries.join(', ')}`, 
+                metaValues
+            );
+        }
+
+        return true;
+    },
+
+    destroyAboutSection: async (id) => {
+        // Xóa meta trước để tránh lỗi khóa ngoại (nếu chưa set CASCADE)
+        await pool.query('DELETE FROM about_section_meta WHERE section_id = ?', [id]);
+        const [result] = await pool.query('DELETE FROM about_section WHERE id = ?', [id]);
+        return result.affectedRows;
     }
 };
 

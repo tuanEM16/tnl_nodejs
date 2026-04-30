@@ -201,6 +201,41 @@ const postController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+getAboutSections: async (req, res) => {
+        try {
+            const data = await postService.getAboutSections();
+            res.status(200).json({ success: true, data });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    storeAboutSection: async (req, res) => {
+        try {
+            const id = await postService.storeAboutSection(req.body, req.file);
+            res.status(201).json({ success: true, message: 'Đã lưu Section thành công!', id });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    updateAboutSection: async (req, res) => {
+        try {
+            await postService.updateAboutSection(req.params.id, req.body, req.file);
+            res.status(200).json({ success: true, message: 'Cập nhật Section thành công!' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    destroyAboutSection: async (req, res) => {
+        try {
+            await postService.destroyAboutSection(req.params.id);
+            res.status(200).json({ success: true, message: 'Xóa Section thành công' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
 };
 
 module.exports = postController;
