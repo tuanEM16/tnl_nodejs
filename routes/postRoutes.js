@@ -24,10 +24,4 @@ router.post('/posts', authMiddleware, upload.single('image'), postController.sto
 router.put('/posts/:id', authMiddleware, upload.single('image'), postController.update);
 router.delete('/posts/:id', authMiddleware, postController.destroy);
 
-// Thêm authMiddleware vào để bảo vệ Admin
-router.get('/about-sections', postController.getAboutSections); // GET thì ai xem cũng được (public)
-router.post('/about-sections', authMiddleware, upload.single('meta_image'), postController.storeAboutSection);
-router.put('/about-sections/:id', authMiddleware, upload.single('meta_image'), postController.updateAboutSection);
-router.delete('/about-sections/:id', authMiddleware, postController.destroyAboutSection);
-
 module.exports = router;

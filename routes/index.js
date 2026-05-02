@@ -10,10 +10,11 @@ const postRoutes = require('./postRoutes');
 const menuRoutes = require('./menuRoutes');
 const certificateRoutes = require('./certificateRoutes');
 const partnerRoutes = require('./partnerRoutes');
-
+const estimateRoutes = require('./estimateRoutes');
 
 router.use('/certificates', certificateRoutes);
 router.use('/partners', partnerRoutes);
+router.use('/estimates', estimateRoutes);
 router.use(bannerRoutes);
 router.use(categoryRoutes);
 router.use(productRoutes);
