@@ -17,6 +17,7 @@ D:.
 |       certificateController.js
 |       configController.js
 |       contactController.js
+|       estimateController.js
 |       menuController.js
 |       partnerController.js
 |       postController.js
@@ -34,10 +35,12 @@ D:.
 |       certificateModel.js
 |       configModel.js
 |       contactModel.js
+|       estimateModel.js
 |       menuModel.js
 |       partnerModel.js
 |       passwordResetModel.js
 |       postCategoryModel.js
+|       postImageModel.js
 |       postModel.js
 |       productModel.js
 |       userModel.js
@@ -2543,6 +2546,7 @@ D:.
 |       certificateRoutes.js
 |       configRoutes.js
 |       contactRoutes.js
+|       estimateRoutes.js
 |       index.js
 |       menuRoutes.js
 |       partnerRoutes.js
@@ -2556,6 +2560,7 @@ D:.
 |       certificateService.js
 |       configService.js
 |       contactService.js
+|       estimateService.js
 |       menuService.js
 |       partnerService.js
 |       postService.js
@@ -2563,56 +2568,15 @@ D:.
 |       userService.js
 |       
 +---uploads
-|       1777273187890-750481904.mp4
-|       1777338428224-833406438.jpg
-|       1777338443937-702097070.jpg
-|       1777340367891-440695058.jpg
-|       1777340378049-525071772.png
-|       1777341326721-228352046.jpg
-|       1777341338061-697369582.jpeg
-|       1777341954457-980742270.jpg
-|       1777344855326-194154219.jpg
-|       1777348640816-377132164.jpg
-|       1777363208450-998306085.jpg
-|       1777363658075-808871601.jpg
-|       1777363736612-364596656.jpg
-|       1777363761712-310212596.jpg
-|       1777363843531-797192200.jpg
-|       1777363915231-623231424.png
-|       1777363932628-76301843.jpg
-|       1777363947563-859960474.jpg
-|       1777364169288-731952602.jpg
-|       1777364182663-397186400.jpg
-|       1777364197212-71325636.jpg
-|       1777364383951-199167999.jpg
-|       1777364391486-134904505.jpg
-|       1777364398808-719436724.png
-|       1777364608855-812610661.jpg
-|       1777364616256-632984971.png
-|       1777365008140-162326379.jpg
-|       1777365016006-463176368.jpg
-|       1777365042424-688694708.jpg
-|       1777365123264-103865488.jpg
-|       1777365133478-521895669.jpg
-|       1777365143163-93534653.jpg
-|       1777365152049-468766202.jpg
-|       1777365162908-89608606.png
-|       1777365179381-401202563.jpg
-|       1777365558906-829648882.png
-|       1777365614839-518665536.jpg
-|       1777366677456-167230425.png
-|       1777366677456-562571435.png
-|       1777367633085-160797546.jpg
-|       1777367691765-609608310.jpg
-|       1777368026794-303682324.png
-|       1777368215718-386880216.jpg
-|       1777368268318-994565003.jpg
-|       1777368283693-959082050.png
-|       1777369356710-290164679.png
-|       1777369365812-756835807.jpg
-|       1777369374603-963745634.jpg
-|       1777369407657-904869106.jpg
-|       1777424114614-654472165.jpg
+|       1777539077683.jpg
+|       1777539086620.jpg
+|       1777684603727.png
+|       1777695848495.png
+|       1777695852292.jpg
+|       1777695929233.jpg
+|       1777703428893.jpg
+|       1777703462192.png
+|       1777703495021.jpg
 |       
 \---utils
         emailTemplates.js

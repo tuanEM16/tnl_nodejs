@@ -6,8 +6,8 @@ const estimateService = {
     const materialTypes = await estimateModel.getMaterialTypes();
     const complexityLevels = await estimateModel.getComplexityLevels();
     const priceRules = await estimateModel.getAllPriceRules();
-    
-    return { usageTypes, materialTypes, complexityLevels, priceRules };
+    const items = await estimateModel.admin.items.getAll();
+    return { usageTypes, materialTypes, complexityLevels, priceRules, items };
   },
 
   calculateQuickEstimate: async (data) => {
@@ -38,18 +38,20 @@ const estimateService = {
       let quantity = 0;
       let applied_factor = 1;
 
-      if (rule.item_name.includes('Cột thép, vì kèo') || rule.item_name.includes('Xà gồ')) {
+      const formulaType = rule.formula_type;
+
+      if (formulaType === 'structure') {
         quantity = floor_area; 
         applied_factor = hFactor.factor_structure * kFactor; 
-      } else if (rule.item_name.includes('Tôn lợp mái')) {
+      } else if (formulaType === 'roof') {
         quantity = roof_area;
         applied_factor = hFactor.factor_cover;
-      } else if (rule.item_name.includes('Tôn bao che tường')) {
+      } else if (formulaType === 'wall') {
         quantity = wall_area;
         applied_factor = hFactor.factor_cover;
       }
 
-      const total_price = rule.unit_price * quantity * applied_factor * rule.factor_default;
+      const total_price = rule.unit_price * quantity * applied_factor * (rule.factor_default ?? 1);  
       total_estimated += total_price;
 
       estimate_items.push({

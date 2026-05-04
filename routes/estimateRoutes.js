@@ -3,26 +3,27 @@ const router = express.Router();
 const estimateController = require('../controllers/estimateController');
 
 // ==========================================
-// 1. PUBLIC ROUTES (Gốc: /estimates)
+// 1. PUBLIC ROUTES
 // ==========================================
 router.get('/options', estimateController.getOptions);
 router.post('/calculate', estimateController.calculate);
 
 // ==========================================
-// 2. ADMIN ROUTES (Gốc: /estimates/admin/...)
+// 2. ADMIN CRUD ROUTES
 // ==========================================
-const setupAdminRoutes = (path, controller) => {
-  router.get(`/admin/${path}`, controller.getAll);
-  router.get(`/admin/${path}/:id`, controller.getById);
-  router.post(`/admin/${path}`, controller.create);
-  router.put(`/admin/${path}/:id`, controller.update);
-  router.delete(`/admin/${path}/:id`, controller.delete);
+const setupRoutes = (path, controller) => {
+  router.get(`/${path}`, controller.getAll);
+  router.get(`/${path}/:id`, controller.getById);
+  router.post(`/${path}`, controller.create);
+  router.put(`/${path}/:id`, controller.update);
+  router.delete(`/${path}/:id`, controller.delete);
 };
 
-setupAdminRoutes('usage-types', estimateController.admin.usageTypes);
-setupAdminRoutes('material-types', estimateController.admin.materialTypes);
-setupAdminRoutes('complexity-levels', estimateController.admin.complexityLevels);
-setupAdminRoutes('height-factors', estimateController.admin.heightFactors);
-setupAdminRoutes('price-rules', estimateController.admin.priceRules);
+setupRoutes('usage-types', estimateController.admin.usageTypes);
+setupRoutes('material-types', estimateController.admin.materialTypes);
+setupRoutes('complexity-levels', estimateController.admin.complexityLevels);
+setupRoutes('height-factors', estimateController.admin.heightFactors);
+setupRoutes('price-rules', estimateController.admin.priceRules);
+setupRoutes('items', estimateController.admin.items);
 
 module.exports = router;

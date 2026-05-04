@@ -45,10 +45,11 @@ const estimateModel = {
 
   getAllPriceRules: async () => {
     const [rows] = await pool.query(`
-      SELECT pr.item_name, pr.unit_price, pr.unit, u.name as usage_name, m.name as material_name
+      SELECT pr.unit_price, pr.unit, u.name as usage_name, m.name as material_name, i.name as item_name
       FROM price_rules pr
       JOIN usage_types u ON pr.usage_type_id = u.id
       JOIN material_types m ON pr.material_type_id = m.id
+      JOIN estimate_items i ON pr.item_id = i.id
       WHERE pr.status = 1
       ORDER BY u.sort_order ASC, m.sort_order ASC, pr.sort_order ASC
     `);
@@ -72,12 +73,14 @@ const estimateModel = {
     return rows;
   },
 
+  // Cập nhật lại hàm getPriceRulesByConfig trong file models/estimateModel.js
   getPriceRulesByConfig: async (usage_type_id, material_type_id) => {
     const [rows] = await pool.query(
-      `SELECT item_name, unit_price, unit, factor_default 
-       FROM price_rules 
-       WHERE usage_type_id = ? AND material_type_id = ? AND status = 1 
-       ORDER BY sort_order ASC`,
+      `SELECT pr.item_id, i.name as item_name, i.formula_type, pr.unit_price, pr.unit, pr.factor_default 
+       FROM price_rules pr
+       JOIN estimate_items i ON pr.item_id = i.id
+       WHERE pr.usage_type_id = ? AND pr.material_type_id = ? AND pr.status = 1 
+       ORDER BY pr.sort_order ASC`,
       [usage_type_id, material_type_id]
     );
     return rows;
@@ -91,14 +94,16 @@ const estimateModel = {
     materialTypes: createCrud('material_types'),
     complexityLevels: createCrud('complexity_levels'),
     heightFactors: createCrud('height_factors', 'min_height ASC'),
+    items: createCrud('estimate_items'),
     priceRules: {
       ...createCrud('price_rules'),
       getAllJoined: async () => {
         const [rows] = await pool.query(`
-          SELECT pr.*, u.name as usage_name, m.name as material_name
+          SELECT pr.*, u.name as usage_name, m.name as material_name, i.name as item_name
           FROM price_rules pr
           LEFT JOIN usage_types u ON pr.usage_type_id = u.id
           LEFT JOIN material_types m ON pr.material_type_id = m.id
+          LEFT JOIN estimate_items i ON pr.item_id = i.id
           ORDER BY u.sort_order ASC, m.sort_order ASC, pr.sort_order ASC
         `);
         return rows;

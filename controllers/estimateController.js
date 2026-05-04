@@ -82,7 +82,10 @@ const estimateController = {
     materialTypes: createAdminController(estimateModel.admin.materialTypes),
     complexityLevels: createAdminController(estimateModel.admin.complexityLevels),
     heightFactors: createAdminController(estimateModel.admin.heightFactors),
-    priceRules: createAdminController(estimateModel.admin.priceRules, true)
+    priceRules: createAdminController(estimateModel.admin.priceRules, true),
+    
+    // 🟢 Chèn thẳng bảng Items vào đây luôn cho lẹ, không cần rườm rà ở trên
+    items: createAdminController(estimateModel.admin.items) 
   }
 };
 

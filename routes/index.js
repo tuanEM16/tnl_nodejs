@@ -11,10 +11,12 @@ const menuRoutes = require('./menuRoutes');
 const certificateRoutes = require('./certificateRoutes');
 const partnerRoutes = require('./partnerRoutes');
 const estimateRoutes = require('./estimateRoutes');
+const chatRoutes = require('./chatRoutes'); 
 
 router.use('/certificates', certificateRoutes);
 router.use('/partners', partnerRoutes);
 router.use('/estimates', estimateRoutes);
+router.use('/chat', chatRoutes);
 router.use(bannerRoutes);
 router.use(categoryRoutes);
 router.use(productRoutes);
