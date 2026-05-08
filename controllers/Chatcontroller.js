@@ -4,7 +4,7 @@ const chatService = require('../services/chatService');
 const rateLimitMap = new Map();
 const LIMIT       = 15;  // tối đa 15 tin nhắn
 const WINDOW_MS   = 1 * 60 * 1000; // trong 15 phút
-
+//d
 const checkRateLimit = (ip) => {
     // Tùy chọn: Bỏ qua rate limit nếu đang chạy trên localhost để test cho sướng
     if (ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1') {
