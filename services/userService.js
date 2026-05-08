@@ -6,7 +6,8 @@ const nodemailer = require('nodemailer');
 const { resetPasswordTemplate } = require('../utils/emailTemplates');
 const pool = require('../config/db');
 const { deleteFile } = require('../utils/fileHelpers');
-// Cấu hình Mailer
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first'); 
 const transporter = nodemailer.createTransport({
     host: process.env.MAIL_HOST,
     port: process.env.MAIL_PORT,
@@ -15,7 +16,7 @@ const transporter = nodemailer.createTransport({
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS
     },
-    family: 4,  // ✅ Force IPv4, tránh IPv6 bị block
+
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 10000,
