@@ -260,8 +260,10 @@ ${catContext}${prodContext}${projContext}${certContext}${postContext}${estContex
             { role: 'user', parts: [{ text: newMessage }] }
         ];
 
-        const MODELS = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash'];
-        let lastError = null;
+        const MODELS = [
+            'gemini-2.5-flash',
+            'gemini-2.5-flash-lite'
+        ]; let lastError = null;
 
         for (const model of MODELS) {
             try {
