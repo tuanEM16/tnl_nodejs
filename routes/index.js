@@ -13,6 +13,7 @@ const partnerRoutes = require('./partnerRoutes');
 const estimateRoutes = require('./estimateRoutes');
 const chatRoutes = require('./chatRoutes'); 
 const projectLocationRoutes  = require('./projectLocationRoutes');
+const analyticsRoutes = require('./analyticsRoutes');
 
 router.use('/certificates', certificateRoutes);
 router.use('/partners', partnerRoutes);
@@ -28,4 +29,5 @@ router.use(contactRoutes);
 router.use(postRoutes);
 router.use(menuRoutes); 
 router.use(projectLocationRoutes); 
+router.use(analyticsRoutes);
 module.exports = router;

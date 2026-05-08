@@ -3,7 +3,7 @@ const AnalyticsModel = require('../models/analyticsModel');
 const analyticsService = {
 
     track: async (data) => {
-        const allowed = ['product', 'post', 'project', 'home', 'other'];
+        const allowed = ['product', 'post', 'project', 'home', 'other', 'estimate', 'about'];
         if (!allowed.includes(data.page_type)) data.page_type = 'other';
         return await AnalyticsModel.track(data);
     },
@@ -16,7 +16,6 @@ const analyticsService = {
             AnalyticsModel.getTrafficSources(days)
         ]);
 
-        // Map totalViews array thành object
         const viewMap = {};
         totalViews.forEach(r => { viewMap[r.page_type] = parseInt(r.total); });
 
@@ -27,6 +26,8 @@ const analyticsService = {
             product_views:  viewMap.product  || 0,
             post_views:     viewMap.post     || 0,
             project_views:  viewMap.project  || 0,
+            estimate_views: viewMap.estimate || 0, // 🟢 Thêm trường này
+            about_views:    viewMap.about    || 0, // 🟢 Thêm trường này
             conversions,
             traffic_sources: trafficSources
         };
