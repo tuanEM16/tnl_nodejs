@@ -7,7 +7,9 @@ const routes = require('./routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 // 🟢 2. Cấu hình CORS "Chốt chặn" (Phải làm chuẩn mới chạy được Cookie)
 app.use(cors({
     
