@@ -254,35 +254,55 @@ ${catContext}${prodContext}${projContext}${certContext}${postContext}${estContex
             { role: 'user', parts: [{ text: newMessage }] }
         ];
 
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    system_instruction: { parts: [{ text: systemPrompt }] },
-                    contents,
-                    generationConfig: { maxOutputTokens: 800, temperature: 0.7 }
-                })
+        // Thử lần lượt các model nếu model đầu bị lỗi
+        const MODELS = [
+            'gemini-1.5-flash',
+            'gemini-1.5-flash-8b',
+        ];
+
+        let lastError = null;
+
+        for (const model of MODELS) {
+            try {
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            system_instruction: { parts: [{ text: systemPrompt }] },
+                            contents,
+                            generationConfig: { maxOutputTokens: 800, temperature: 0.7 }
+                        })
+                    }
+                );
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    const msg = err.error?.message || `HTTP ${response.status}`;
+                    console.error(`❌ [CHAT] Model ${model} lỗi:`, msg);
+                    lastError = new Error(`Gemini API lỗi: ${msg}`);
+                    continue; // thử model tiếp theo
+                }
+
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!text) {
+                    console.error(`❌ [CHAT] Model ${model} trả về rỗng`);
+                    lastError = new Error('Gemini không trả về nội dung');
+                    continue;
+                }
+
+                console.log(`✅ [CHAT] Model ${model} phản hồi thành công`);
+                return text;
+
+            } catch (err) {
+                console.error(`❌ [CHAT] Model ${model} exception:`, err.message);
+                lastError = err;
             }
-        );
-
-        if (!response.ok) {
-            const err = await response.json();
-            const msg = err.error?.message || `HTTP ${response.status}`;
-            console.error('❌ [CHAT] Gemini API lỗi:', msg);
-            throw new Error(`Gemini API lỗi: ${msg}`);
         }
 
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!text) {
-            console.error('❌ [CHAT] Gemini trả về rỗng:', JSON.stringify(data));
-            throw new Error('Gemini không trả về nội dung');
-        }
-
-        console.log('✅ [CHAT] Gemini phản hồi thành công');
-        return text;
+        throw lastError;
     },
 
     // ── 10. Hàm chính ─────────────────────────────────────────────────────────
