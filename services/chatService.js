@@ -260,7 +260,7 @@ callGeminiAPI: async (systemPrompt, history, newMessage) => {
         { role: 'user', parts: [{ text: newMessage }] }
     ];
 
-    const MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'];
+    const MODELS = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-latest'];
     let lastError = null;
 
     for (const model of MODELS) {
