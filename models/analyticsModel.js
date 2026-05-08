@@ -22,23 +22,25 @@ const AnalyticsModel = {
         return rows;
     },
 
-    getTopProducts: async (days = 30, limit = 10) => {
-        const [rows] = await pool.execute(
-            `SELECT pv.ref_id, pv.ref_slug, p.name AS product_name,
-                    c.name AS category_name,
-                    COUNT(*) AS views
-             FROM page_views pv
-             LEFT JOIN product p ON pv.ref_id = p.id
-             LEFT JOIN category c ON p.category_id = c.id
-             WHERE pv.page_type = 'product'
-               AND pv.viewed_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
-             GROUP BY pv.ref_id, pv.ref_slug, p.name, c.name
-             ORDER BY views DESC
-             LIMIT ?`,
-            [days, limit]
-        );
-        return rows;
-    },
+getTopProducts: async (days = 30, limit = 10) => {
+    const safedays = parseInt(days) || 30;
+    const safeLimit = parseInt(limit) || 10;
+    const [rows] = await pool.execute(
+        `SELECT pv.ref_id, pv.ref_slug, p.name AS product_name,
+                c.name AS category_name,
+                COUNT(*) AS views
+         FROM page_views pv
+         LEFT JOIN product p ON pv.ref_id = p.id
+         LEFT JOIN category c ON p.category_id = c.id
+         WHERE pv.page_type = 'product'
+           AND pv.viewed_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+         GROUP BY pv.ref_id, pv.ref_slug, p.name, c.name
+         ORDER BY views DESC
+         LIMIT ${safeLimit}`,
+        [safedays]
+    );
+    return rows;
+},
 
     getViewsByDay: async (days = 30) => {
         const [rows] = await pool.execute(

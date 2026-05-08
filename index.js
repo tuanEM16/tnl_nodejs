@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 5000;
 
 // 🟢 2. Cấu hình CORS "Chốt chặn" (Phải làm chuẩn mới chạy được Cookie)
 app.use(cors({
-    // 🚩 Đặt đúng địa chỉ Next.js của đại ca, KHÔNG được dùng '*'
+    
     origin: process.env.FRONTEND_URL || 'http://localhost:3000', 
     credentials: true, // 🚩 CHO PHÉP Cookie đi qua cổng này
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
