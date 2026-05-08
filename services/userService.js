@@ -14,9 +14,15 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS
-    }
+    },
+    connectionTimeout: 10000,  // 10 giây
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
 });
-
+transporter.verify((error, success) => {
+    if (error) console.error('❌ SMTP ERROR:', error.message);
+    else console.log('✅ SMTP ready');
+});
 const generateTokens = async (user) => {
     const accessToken = jwt.sign(
         { id: user.id, username: user.username, roles: user.roles },
@@ -156,7 +162,6 @@ const userService = {
     update: async (id, data, file) => {
         const updateData = { ...data };
 
-        // 🗑️ DỌN DẸP TRƯỚC KHI UPDATE
         delete updateData._method; // Xóa hack method của Laravel/Next
 
         // 🚩 QUAN TRỌNG: Nếu trong data có gửi kèm cái avatar cũ (dạng string), 
@@ -202,6 +207,7 @@ const userService = {
         if (!affected) throw new Error('Xóa thất bại');
         return affected;
     },
+    
 };
 
 module.exports = userService;
