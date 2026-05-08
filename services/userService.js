@@ -15,7 +15,8 @@ const transporter = nodemailer.createTransport({
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS
     },
-    connectionTimeout: 10000,  // 10 giây
+    family: 4,  // ✅ Force IPv4, tránh IPv6 bị block
+    connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 10000,
 });
