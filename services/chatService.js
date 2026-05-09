@@ -259,11 +259,16 @@ ${catContext}${prodContext}${projContext}${certContext}${postContext}${estContex
             // Câu hỏi hiện tại
             { role: 'user', parts: [{ text: newMessage }] }
         ];
-
+        // ✅ Sửa lại - model ổn định, hỗ trợ toàn cầu
         const MODELS = [
-            'gemini-2.5-flash',
-            'gemini-2.5-flash-lite'
-        ]; let lastError = null;
+            'gemini-1.5-flash',
+            'gemini-1.5-flash-8b'
+        ];
+        // const MODELS = [
+        //     'gemini-2.5-flash',
+        //     'gemini-2.5-flash-lite'
+        // ]; 
+        let lastError = null;
 
         for (const model of MODELS) {
             try {
