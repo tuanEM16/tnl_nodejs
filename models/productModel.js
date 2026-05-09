@@ -121,14 +121,19 @@ const Product = {
 
     // 🟢 4. CẬP NHẬT DỮ LIỆU CỐT LÕI
     create: async (data) => {
-        const { category_id, name, slug, thumbnail, content, description, standard, application, created_by = 1 } = data;
-        const [result] = await pool.query(
-            `INSERT INTO product (category_id, name, slug, thumbnail, content, description, standard, application, created_at, created_by, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, 1)`,
-            [category_id, name, slug, thumbnail, content, description || null, standard || null, application || null, created_by]
-        );
-        return result.insertId;
-    },
+    const { category_id, name, slug, thumbnail, content, description, standard, application, created_by = 1 } = data;
+    
+    // ✅ Thêm 2 dòng này để sinh ID cho TiDB
+    const [[{ maxId }]] = await pool.query('SELECT MAX(id) as maxId FROM product');
+    const newId = (Number(maxId) || 0) + 1;
+
+    const [result] = await pool.query(
+        `INSERT INTO product (id, category_id, name, slug, thumbnail, content, description, standard, application, created_at, created_by, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, 1)`,
+        [newId, category_id, name, slug, thumbnail, content, description || null, standard || null, application || null, created_by]
+    );
+    return result.insertId || newId;
+},
 
     update: async (id, data) => {
         const fields = [];
