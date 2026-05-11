@@ -14,10 +14,7 @@ const PostCategory = {
     },
 
     create: async (data) => {
-        const { name, slug, parent_id = 0 } = data;
-        const sort_order = parseInt(data.sort_order ?? 0) || 0;
-        const category_id = data.category_id ? parseInt(data.category_id) : null;
-        const page_category_id = data.page_category_id ? parseInt(data.page_category_id) : null;
+        const { name, slug, parent_id = 0, sort_order = 0 } = data;
         const [result] = await pool.query(
             `INSERT INTO post_category (name, slug, parent_id, sort_order, created_at, status)
              VALUES (?, ?, ?, ?, NOW(), 1)`,
@@ -29,36 +26,18 @@ const PostCategory = {
     update: async (id, data) => {
         const fields = [];
         const values = [];
-
-        const allowedColumns = [
-            'category_id', 'page_category_id', 'title', 'slug', 'image',
-            'content', 'description', 'post_type', 'status', 'sort_order', 'layout'
-        ];
-
-        // 🟢 Các cột INTEGER cần parse
-        const integerColumns = ['category_id', 'page_category_id', 'sort_order', 'status'];
-
         Object.keys(data).forEach(key => {
-            if (allowedColumns.includes(key) && data[key] !== undefined) {
+            if (data[key] !== undefined) {
                 fields.push(`${key} = ?`);
-
-                if (integerColumns.includes(key)) {
-                    // 🟢 Nếu rỗng/null => null, ngược lại parseInt
-                    const val = data[key] === '' || data[key] === null
-                        ? null
-                        : parseInt(data[key], 10);
-                    values.push(val);
-                } else {
-                    values.push(data[key]);
-                }
+                values.push(data[key]);
             }
         });
-
         if (fields.length === 0) return 0;
-
         values.push(id);
-        const sql = `UPDATE post SET ${fields.join(', ')}, updated_at = NOW() WHERE id = ?`;
-        const [result] = await pool.query(sql, values);
+        const [result] = await pool.query(
+            `UPDATE post_category SET ${fields.join(', ')}, updated_at = NOW() WHERE id = ?`,
+            values
+        );
         return result.affectedRows;
     },
 
