@@ -155,34 +155,27 @@ const postController = {
     },
 
 
-    update: async (req, res) => {
-        try {
-            console.log('===== UPDATE POST =====');
-            console.log('req.params.id:', req.params.id);
-            console.log('req.file:', req.file);           // Phải có object chứa filename
-            console.log('req.body:', req.body);
-            const { id } = req.params;
-            const payload = { ...req.body };
+update: async (req, res) => {
+    try {
+        const { id } = req.params;
 
-            if (req.file) {
-                payload.image = req.file.filename;
-            }
+        // 🟢 Chỉ dùng 1 biến, parse integer luôn tại đây
+        const updateData = {
+            ...req.body,
+            // Parse các cột INTEGER, rỗng thì null
+            category_id: req.body.category_id !== '' ? parseInt(req.body.category_id) : null,
+            page_category_id: req.body.page_category_id !== '' ? parseInt(req.body.page_category_id) : null,
+            sort_order: req.body.sort_order !== '' ? parseInt(req.body.sort_order) : 0,
+            status: req.body.status !== '' ? parseInt(req.body.status) : 1,
+        };
 
+        await postService.update(id, updateData, req.file);
 
-            if (payload.image && typeof payload.image !== 'string') {
-                delete payload.image;
-            }
-
-
-            const updateData = { ...req.body };
-            // 🟢 Truyền thêm req.file vào tham số thứ 3
-            await postService.update(req.params.id, updateData, req.file);
-
-            res.status(200).json({ success: true, message: 'Cập nhật bài viết thành công' });
-        } catch (error) {
-            res.status(500).json({ success: false, message: error.message });
-        }
-    },
+        res.status(200).json({ success: true, message: 'Cập nhật bài viết thành công' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+},
 
     destroy: async (req, res) => {
         try {

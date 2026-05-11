@@ -142,6 +142,15 @@ const postService = {
         const updateData = { ...data };
         delete updateData._method;
 
+        // 🟢 Đảm bảo không có string rỗng cho INTEGER columns
+        ['category_id', 'page_category_id', 'sort_order', 'status'].forEach(key => {
+            if (key in updateData) {
+                updateData[key] = updateData[key] === '' || updateData[key] === null
+                    ? (key === 'sort_order' || key === 'status' ? 0 : null)
+                    : parseInt(updateData[key], 10);
+            }
+        });
+
         if (file) {
             const oldPost = await Post.getById(id);
             if (oldPost && oldPost.image) await deleteFile(oldPost.image);
